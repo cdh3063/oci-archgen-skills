@@ -4,7 +4,7 @@ Skills for generating editable Oracle Cloud Infrastructure (OCI) architecture Po
 
 GitHub Pages preview: https://cdh3063.github.io/oci-archgen-skills/
 
-![Generated OCI HA architecture PPTX preview](docs/assets/ha-waf-dataguard.png)
+![Generated OCI DR architecture PPTX preview](docs/assets/dr-remote-peering-3tier-dg.png)
 
 ## Included Skills
 
@@ -15,8 +15,9 @@ Creates editable `.pptx` OCI architecture diagrams from natural-language archite
 Key capabilities:
 
 - Region > VCN > subnet > service layout.
+- OCI service architecture coverage backed by 160+ mapped OCI service icons.
 - OCI-style containers, subnet badges, gateway placement, and OSN handling.
-- WAF, public/private LoadBalancer, redundant Web/App tiers, DataGuard, and service-gateway patterns.
+- Public/private LoadBalancer, redundant Web/App tiers, local or remote VCN peering, DataGuard, and service-gateway patterns.
 - Editable PowerPoint output generated with deterministic OOXML.
 - Model-aware validation for layout, required text coverage, and package structure.
 
@@ -64,16 +65,18 @@ You can also render from a structured model:
 
 ```bash
 python3 ~/.codex/skills/oci-arch-pptx/scripts/generate_pptx.py \
-  examples/ha-waf-dataguard-model.json \
-  /tmp/ha-waf-dataguard.pptx
+  examples/dr-remote-peering-3tier-dg-model.json \
+  /tmp/dr-remote-peering-3tier-dg.pptx
 
 python3 ~/.codex/skills/oci-arch-pptx/scripts/validate_pptx.py \
-  /tmp/ha-waf-dataguard.pptx \
-  --model examples/ha-waf-dataguard-model.json
+  /tmp/dr-remote-peering-3tier-dg.pptx \
+  --model examples/dr-remote-peering-3tier-dg-model.json
 ```
 
 ## Examples
 
+- `examples/dr-remote-peering-3tier-dg-model.json`
+- `examples/dr-remote-peering-3tier-dg.pptx`
 - `examples/ha-waf-dataguard-model.json`
 - `examples/ha-waf-dataguard.pptx`
 

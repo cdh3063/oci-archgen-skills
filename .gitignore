@@ -21,3 +21,10 @@ build/
 *.generated.pptx
 *-preview/
 *-preview-*/
+
+# Extracted OCI icon intermediates. The renderer uses icon-map asset_path PNGs.
+skills/oci-arch-pptx/assets/extracted-icons/*.svg
+skills/oci-arch-pptx/assets/extracted-icons/*.svg.png
+skills/oci-arch-pptx/assets/extracted-icons/*.png
+!skills/oci-arch-pptx/assets/extracted-icons/*.drawio.png
+!skills/oci-arch-pptx/assets/extracted-icons/subnet.png

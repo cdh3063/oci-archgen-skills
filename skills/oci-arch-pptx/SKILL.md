@@ -22,6 +22,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Keep databases and application backends in private subnets.
    - Use public or DMZ subnets only for internet-facing entry points such as public LoadBalancers and bastion access.
    - When both Web and App tiers are redundant, model the traffic chain as Public LoadBalancer -> Web backend set and Private/Internal LoadBalancer -> App backend set; do not pin individual Web nodes directly to individual App nodes unless the user explicitly requests that pattern.
+   - For two-VCN DR, use top-level `vcns`. If both VCNs are in the same region, model Local Peering Gateway (`LPG`); if regions differ, model Remote Peering Gateway/Connection (`RPG`).
    - Add NSG/security-rule notes for LoadBalancer to backend, bastion to private targets, app to database, and private egress.
 
 3. Map services to OCI PowerPoint icons.
@@ -75,6 +76,7 @@ Region
 ```
 
 - Draw Region as the outer boundary. Draw the VCN as the primary inner boundary.
+- When the model has top-level `vcns`, draw VCNs side by side. Use one Region boundary for same-region local peering and separate Region boundaries for cross-region remote peering.
 - Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, App/Private, Data/Private, Management. Use a single vertical stack up to four subnets; for five or more subnets, use a VCN-internal grid unless the model explicitly sets `layout.subnet_columns`.
 - Put the VCN icon centered on the VCN container's upper-right vertex without a text label.
 - Put Route Table and Security List icons tightly against each subnet container's upper-right corner without text labels.
@@ -85,6 +87,8 @@ Region
 - Keep non-badge OCI service icons at a consistent larger size; do not resize the VCN, Route Table, or Security List corner badges unless requested.
 - Place services only inside their owning subnet unless the resource is external to OCI or is a VCN-level gateway.
 - Place VCN-level gateways inside the Region and adjacent to the VCN edge: IGW/NAT/DRG on the left side when shown, Service Gateway on the boundary between VCN and OSN when shown.
+- Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet instead of directly beside IGW.
+- For local VCN peering, place `LPG` gateways on facing VCN edges aligned with the second private subnet when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule.
 - Put external clients, internet actors, On-Prem, CPE, and Customer Data Center endpoints outside the Region boundary. Render Internet Users with the `user` icon, not a cloud shape. Connect On-Prem/CPE to DRG with `connections` entries such as FastConnect or VPN.
 - Keep gateway labels short (`IGW`, `NAT`, `DRG`, `SGW`) when space is tight, and expand the meaning in slide notes.
 - Keep arrows sparse: show only the primary ingress path, admin path through bastion, private app-to-data path, and private egress/service-access path when relevant. If these lines reduce readability, omit connection lines from the diagram slide and keep flow details in notes.

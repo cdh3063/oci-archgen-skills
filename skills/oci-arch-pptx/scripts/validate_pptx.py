@@ -39,14 +39,15 @@ TIER_ORDER = {
     "security": 1,
     "inspection": 1,
     "firewall": 1,
-    "app": 2,
-    "application": 2,
-    "private": 2,
-    "data": 3,
-    "db": 3,
-    "database": 3,
-    "management": 4,
-    "mgmt": 4,
+    "web": 2,
+    "app": 3,
+    "application": 3,
+    "private": 3,
+    "data": 4,
+    "db": 4,
+    "database": 4,
+    "management": 5,
+    "mgmt": 5,
 }
 
 EDGE_TERMS = ("api gateway", "bastion", "load balancer", "waf")
@@ -326,8 +327,8 @@ def validate_subnet_layout(
     elements: dict[str, list[NamedElement]], errors: list[str]
 ) -> int:
     checks = 0
-    vcn = first_element(elements, "VCN boundary")
-    if vcn is None:
+    vcns = elements.get("VCN boundary") or []
+    if not vcns:
         return checks
 
     subnets = [
@@ -337,7 +338,14 @@ def validate_subnet_layout(
         for item in matches
     ]
     for subnet in subnets:
-        checks += assert_inside(subnet, vcn, errors)
+        if any(is_inside(subnet, vcn) for vcn in vcns):
+            checks += 1
+        else:
+            errors.append(
+                f"{subnet.name} is not inside any VCN boundary: "
+                f"item=({subnet.box.x:.3f},{subnet.box.y:.3f},"
+                f"{subnet.box.w:.3f},{subnet.box.h:.3f})"
+            )
 
     for left_index, left in enumerate(subnets):
         for right in subnets[left_index + 1 :]:
@@ -646,10 +654,16 @@ def collect_model_requirements(
     elif region is not None:
         errors.append("model region must be an object")
 
+    vcns = model_vcns(model)
     vcn = model.get("vcn")
     subnets: list[Any] = []
     gateways: list[Any] = []
-    if vcn is None:
+    if vcns:
+        for index, item in enumerate(vcns):
+            add_requirement(requirements, "vcn", f"vcns[{index}].name", item.get("name"))
+            subnets.extend(list_field(item.get("subnets", []), f"vcns[{index}].subnets", errors))
+            gateways.extend(list_field(item.get("gateways", []), f"vcns[{index}].gateways", errors))
+    elif vcn is None:
         warnings.append("model has no vcn object; VCN/subnet coverage checks are limited")
     elif not isinstance(vcn, dict):
         errors.append("model vcn must be an object")
@@ -1084,24 +1098,35 @@ def expected_service_labels(service: Any) -> list[str]:
 
 
 def ordered_subnets(model: dict[str, Any]) -> list[dict[str, Any]]:
-    subnets = [
-        subnet
-        for subnet in (model.get("vcn") or {}).get("subnets") or []
-        if isinstance(subnet, dict)
-    ]
-
     def order(subnet: dict[str, Any]) -> tuple[int, str]:
         tier = normalize_lookup(subnet.get("tier") or subnet.get("type"))
         subnet_type = normalize_lookup(subnet.get("type"))
         key = tier if tier in TIER_ORDER else subnet_type
         return (TIER_ORDER.get(key, 10), clean_string(subnet.get("name")))
 
+    vcns = model_vcns(model)
+    if vcns:
+        result: list[dict[str, Any]] = []
+        for vcn in vcns:
+            subnets = [
+                subnet
+                for subnet in vcn.get("subnets") or []
+                if isinstance(subnet, dict)
+            ]
+            result.extend(sorted(subnets, key=order))
+        return result
+
+    subnets = [
+        subnet
+        for subnet in (model.get("vcn") or {}).get("subnets") or []
+        if isinstance(subnet, dict)
+    ]
     return sorted(subnets, key=order)
 
 
 def model_gateway_types(model: dict[str, Any]) -> set[str]:
     result: set[str] = set()
-    for gateway in (model.get("vcn") or {}).get("gateways") or []:
+    for gateway in model_gateways(model):
         if not isinstance(gateway, dict):
             continue
         gateway_type = normalize_lookup(gateway.get("type")).replace(" ", "-")
@@ -1112,6 +1137,23 @@ def model_gateway_types(model: dict[str, Any]) -> set[str]:
         if gateway_type:
             result.add(gateway_type)
     return result
+
+
+def model_vcns(model: dict[str, Any]) -> list[dict[str, Any]]:
+    vcns = model.get("vcns")
+    if isinstance(vcns, list):
+        return [vcn for vcn in vcns if isinstance(vcn, dict)]
+    return []
+
+
+def model_gateways(model: dict[str, Any]) -> list[Any]:
+    vcns = model_vcns(model)
+    if vcns:
+        gateways: list[Any] = []
+        for vcn in vcns:
+            gateways.extend(vcn.get("gateways") or [])
+        return gateways
+    return list((model.get("vcn") or {}).get("gateways") or [])
 
 
 def subnet_kind(subnet: dict[str, Any]) -> str:

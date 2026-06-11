@@ -77,6 +77,9 @@ GATEWAY_ICON_KEYS = {
     "internet-gateway": "internet-gateway",
     "local-peering-gateway": "dynamic-routing-gateway",
     "nat-gateway": "nat-gateway",
+    "remote-peering-gateway": "remote-peering-gateway",
+    "remote-peering-connection": "remote-peering-gateway",
+    "rpg": "remote-peering-gateway",
     "service-gateway": "service-gateway",
 }
 
@@ -86,6 +89,7 @@ GATEWAY_SHORT_LABELS = {
     "dynamic-routing-gateway": "DRG",
     "internet-gateway": "IGW",
     "nat-gateway": "NAT",
+    "remote-peering-gateway": "RPG",
     "service-gateway": "SGW",
 }
 
@@ -96,13 +100,14 @@ TIER_ORDER = {
     "security": 1,
     "inspection": 1,
     "firewall": 1,
-    "app": 2,
-    "application": 2,
-    "private": 2,
-    "data": 3,
-    "db": 3,
-    "database": 3,
-    "management": 4,
+    "web": 2,
+    "app": 3,
+    "application": 3,
+    "private": 3,
+    "data": 4,
+    "db": 4,
+    "database": 4,
+    "management": 5,
 }
 
 STANDARD_ICON_SIZE = 0.48
@@ -873,7 +878,14 @@ class Renderer:
         scope = f"{region_name}"
         if oci_region and oci_region != region_name:
             scope = f"{scope} ({oci_region})"
-        if vcn.get("name"):
+        vcns = self._model_vcns(model)
+        if len(vcns) >= 2:
+            region_labels = [self._region_display_label(self._vcn_region(item, model)) for item in vcns]
+            vcn_names = [str(item.get("name") or f"VCN {index + 1}") for index, item in enumerate(vcns)]
+            scope = " / ".join(dict.fromkeys(region_labels))
+            if vcn_names:
+                scope = f"{scope} - {' / '.join(vcn_names)}"
+        if vcn.get("name") and len(vcns) < 2:
             scope = f"{scope} - {vcn['name']}"
 
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "F8FAFC", None)
@@ -919,6 +931,10 @@ class Renderer:
     def _add_diagram_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         self.boxes = {}
         self.gateway_ids_by_key = {}
+
+        if self._multi_vcn_layout_requested(model):
+            self._add_multi_vcn_diagram_slide(slide, model)
+            return
 
         title = str(model.get("title") or "OCI Architecture")
         region = model.get("region") or {}
@@ -1019,6 +1035,207 @@ class Renderer:
             color="6B7280",
         )
 
+    def _add_multi_vcn_diagram_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        self.boxes = {}
+        self.gateway_ids_by_key = {}
+
+        title = str(model.get("title") or "OCI Architecture")
+        vcns = self._model_vcns(model)[:2]
+        same_region = self._same_region(vcns, model)
+
+        slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "FFFFFF", None)
+        slide.add_text(
+            "Diagram title",
+            Box(0.35, 0.16, 12.1, 0.34),
+            title,
+            size_pt=15,
+            color="111827",
+            bold=True,
+        )
+
+        if same_region:
+            region_box = Box(0.75, 0.74, 11.95, 6.0)
+            self._draw_container(
+                slide,
+                "region",
+                "Region boundary",
+                region_box,
+                f"OCI Region: {self._region_display_label(self._vcn_region(vcns[0], model))}",
+                Box(region_box.x + 0.18, region_box.y + 0.08, region_box.w - 0.36, 0.28),
+                10.5,
+                bold=True,
+                align="ctr",
+            )
+            layouts = [
+                (vcns[0], region_box, Box(1.50, 1.22, 4.45, 5.05), "right"),
+                (vcns[1], region_box, Box(7.55, 1.22, 4.45, 5.05), "left"),
+            ]
+        else:
+            region_boxes = [
+                Box(0.75, 0.74, 5.75, 6.0),
+                Box(6.83, 0.74, 5.95, 6.0),
+            ]
+            vcn_boxes = [
+                Box(1.60, 1.22, 4.08, 5.05),
+                Box(7.60, 1.22, 4.28, 5.05),
+            ]
+            layouts = []
+            for index, vcn in enumerate(vcns):
+                region_box = region_boxes[index]
+                self._draw_container(
+                    slide,
+                    "region",
+                    "Region boundary",
+                    region_box,
+                    f"OCI Region: {self._region_display_label(self._vcn_region(vcn, model))}",
+                    Box(region_box.x + 0.18, region_box.y + 0.08, region_box.w - 0.36, 0.28),
+                    10.0,
+                    bold=True,
+                    align="ctr",
+                )
+                layouts.append((vcn, region_box, vcn_boxes[index], "right" if index == 0 else "left"))
+
+        all_subnet_boxes: dict[str, Box] = {}
+        subnet_index = 1
+        for vcn, region_box, vcn_box, peering_side in layouts:
+            self._draw_container(
+                slide,
+                "vcn",
+                "VCN boundary",
+                vcn_box,
+                self._vcn_label(vcn),
+                Box(vcn_box.x + 0.14, vcn_box.y + 0.08, vcn_box.w - 0.28, 0.28),
+                9.2,
+                bold=True,
+                align="l",
+            )
+            self._draw_icon_only(
+                slide,
+                "virtual-cloud-network",
+                "VCN badge",
+                Box(vcn_box.right - 0.15, vcn_box.y - 0.15, 0.3, 0.3),
+            )
+
+            vcn_model = dict(model)
+            vcn_model["vcn"] = vcn
+            vcn_model["resources"] = self._resources_for_vcn(model, vcn)
+            osn_box = None
+            subnet_boxes = self._draw_subnets(slide, vcn_model, vcn_box, start_index=subnet_index)
+            subnet_index += len(self._ordered_subnets(vcn_model))
+            all_subnet_boxes.update(subnet_boxes)
+            self._draw_gateways(
+                slide,
+                vcn_model,
+                region_box,
+                vcn_box,
+                subnet_boxes,
+                osn_box,
+                peering_side=peering_side,
+            )
+            self._draw_resources(slide, vcn_model, subnet_boxes, osn_box)
+
+        self._draw_multi_vcn_internet_actor(slide, model, all_subnet_boxes)
+        self._draw_peering_exceptions(slide, model)
+
+        show_flows = self._should_draw_flows(model)
+        if show_flows:
+            self._draw_flows(slide, model)
+            legend = "Primary flow arrows are shown; network peering is shown as a gateway connection."
+        else:
+            self._draw_data_guard_exceptions(slide, model)
+            legend = "Only VCN peering and the DataGuard DB relationship are shown; other traffic and security details are listed on the notes slide."
+
+        slide.add_text(
+            "Legend",
+            Box(0.35, 6.93, 12.25, 0.24),
+            legend,
+            size_pt=7.5,
+            color="6B7280",
+        )
+
+    def _multi_vcn_layout_requested(self, model: dict[str, Any]) -> bool:
+        return len(self._model_vcns(model)) >= 2
+
+    def _model_vcns(self, model: dict[str, Any]) -> list[dict[str, Any]]:
+        vcns = model.get("vcns")
+        if isinstance(vcns, list):
+            return [vcn for vcn in vcns if isinstance(vcn, dict)]
+        vcn = model.get("vcn")
+        if isinstance(vcn, dict) and vcn:
+            return [vcn]
+        return []
+
+    def _vcn_region(self, vcn: dict[str, Any], model: dict[str, Any]) -> dict[str, Any]:
+        region = vcn.get("region")
+        if isinstance(region, dict):
+            return region
+        model_region = model.get("region")
+        if isinstance(model_region, dict):
+            return model_region
+        return {}
+
+    def _region_display_label(self, region: dict[str, Any]) -> str:
+        return str(region.get("oci_region") or region.get("name") or "OCI Region")
+
+    def _same_region(self, vcns: list[dict[str, Any]], model: dict[str, Any]) -> bool:
+        region_keys = {
+            normalize_lookup(self._region_display_label(self._vcn_region(vcn, model)))
+            for vcn in vcns
+            if self._region_display_label(self._vcn_region(vcn, model))
+        }
+        return len(region_keys) <= 1
+
+    def _vcn_label(self, vcn: dict[str, Any]) -> str:
+        label = str(vcn.get("name") or "VCN")
+        if vcn.get("cidr"):
+            label = f"{label} {vcn['cidr']}"
+        return label
+
+    def _resources_for_vcn(self, model: dict[str, Any], vcn: dict[str, Any]) -> list[dict[str, Any]]:
+        subnet_names = {
+            str(subnet.get("name") or "")
+            for subnet in vcn.get("subnets") or []
+            if isinstance(subnet, dict)
+        }
+        resource_ids = {
+            str(resource_id)
+            for subnet in vcn.get("subnets") or []
+            if isinstance(subnet, dict)
+            for resource_id in subnet.get("resources") or []
+        }
+        resources: list[dict[str, Any]] = []
+        for resource in model.get("resources") or []:
+            if not isinstance(resource, dict):
+                continue
+            rid = str(resource.get("id") or "")
+            subnet = str(resource.get("subnet") or "")
+            if rid in resource_ids or subnet in subnet_names:
+                resources.append(resource)
+        return resources
+
+    def _draw_multi_vcn_internet_actor(
+        self,
+        slide: SlideBuilder,
+        model: dict[str, Any],
+        subnet_boxes: dict[str, Box],
+    ) -> None:
+        if not self._needs_internet_actor(model):
+            return
+        first_subnet = next(iter(subnet_boxes.values()), None)
+        center_y = first_subnet.cy if first_subnet else 1.9
+        user_box = Box(0.08, center_y - STANDARD_ICON_SIZE / 2, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
+        self._draw_icon(
+            slide,
+            "user",
+            "Internet Users",
+            user_box,
+            label_width=1.12,
+            label_size=STANDARD_ICON_LABEL_SIZE,
+        )
+        self.boxes["internet"] = user_box
+        self.boxes["users"] = user_box
+        self.boxes["external"] = user_box
+
     def _add_notes_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "F8FAFC", None)
         slide.add_text(
@@ -1055,7 +1272,7 @@ class Renderer:
         render_items.append("Containers, labels, arrows, and notes are editable PowerPoint objects.")
         render_items.append("OCI service icons are embedded image assets in this first renderer slice.")
         if not self._should_draw_flows(model):
-            render_items.append("Only the DataGuard DB connection line and label are shown on the architecture slide for readability.")
+            render_items.append("Only VCN peering and the DataGuard DB connection line are shown on the architecture slide for readability.")
 
         slide.add_shape("Assumptions box", Box(0.65, 1.1, 5.85, 3.25), "FFFFFF", "CBD5E1", 1.0)
         slide.add_text(
@@ -1152,6 +1369,7 @@ class Renderer:
         slide: SlideBuilder,
         model: dict[str, Any],
         vcn_box: Box,
+        start_index: int = 1,
     ) -> dict[str, Box]:
         subnets = self._ordered_subnets(model)
         count = max(len(subnets), 1)
@@ -1166,6 +1384,7 @@ class Renderer:
         boxes: dict[str, Box] = {}
 
         for index, subnet in enumerate(subnets):
+            display_index = start_index + index
             col = index // rows
             row = index % rows
             box = Box(left + col * (width + gap_x), top + row * (height + gap_y), width, height)
@@ -1181,7 +1400,7 @@ class Renderer:
             self._draw_container(
                 slide,
                 "subnet",
-                f"Subnet {index + 1}",
+                f"Subnet {display_index}",
                 box,
                 label,
                 Box(box.x + 0.12, box.y + 0.08, box.w - 0.24, 0.24),
@@ -1189,7 +1408,7 @@ class Renderer:
                 bold=True,
                 align="l",
             )
-            self._draw_subnet_badges(slide, box, index + 1)
+            self._draw_subnet_badges(slide, box, display_index)
         return boxes
 
     def _subnet_layout_columns(self, model: dict[str, Any], subnet_count: int) -> int:
@@ -1512,7 +1731,7 @@ class Renderer:
         return self._has_gateway_type(model, {"service-gateway"})
 
     def _has_gateway_type(self, model: dict[str, Any], keys: set[str]) -> bool:
-        for gateway in (model.get("vcn") or {}).get("gateways") or []:
+        for gateway in self._iter_model_gateways(model):
             if not isinstance(gateway, dict):
                 continue
             gateway_type = str(gateway.get("type") or "").lower()
@@ -1524,6 +1743,16 @@ class Renderer:
             if any(label == normalize_lookup(item) for item in keys):
                 return True
         return False
+
+    def _iter_model_gateways(self, model: dict[str, Any]) -> list[Any]:
+        gateways: list[Any] = []
+        vcns = self._model_vcns(model)
+        if vcns:
+            for vcn in vcns:
+                gateways.extend((vcn.get("gateways") or []))
+            return gateways
+        gateways.extend((model.get("vcn") or {}).get("gateways") or [])
+        return gateways
 
     def _resource_ids_declared_in_subnets(self, model: dict[str, Any]) -> set[str]:
         ids: set[str] = set()
@@ -1745,6 +1974,7 @@ class Renderer:
         vcn_box: Box,
         subnet_boxes: dict[str, Box],
         osn_box: Box | None,
+        peering_side: str | None = None,
     ) -> None:
         gateways = list((model.get("vcn") or {}).get("gateways") or [])
         left_ys: list[float] = []
@@ -1753,7 +1983,7 @@ class Renderer:
             gateway_type = str(gateway.get("type") or "").lower()
             mapped_key = GATEWAY_ICON_KEYS.get(gateway_type, gateway_type)
             key = self._canonical_icon_key(mapped_key) or mapped_key
-            short_label = GATEWAY_SHORT_LABELS.get(key, str(gateway.get("label") or key))
+            short_label = self._gateway_short_label(key, gateway_type, gateway)
             if key == "service-gateway" and osn_box is not None:
                 x = osn_box.x - STANDARD_ICON_SIZE
                 y = self._avoid_gateway_overlap(
@@ -1763,6 +1993,12 @@ class Renderer:
                     region_box.bottom - 0.92,
                 )
                 right_ys.append(y)
+            elif gateway_type in {"local-peering-gateway", "lpg", "remote-peering-gateway", "remote-peering-connection", "rpg"}:
+                side = peering_side or str(gateway.get("side") or "left").lower()
+                x = vcn_box.right + 0.24 if side == "right" else vcn_box.x - 0.72
+                occupied = right_ys if side == "right" else left_ys
+                y = self._gateway_y(key, gateway_type, subnet_boxes, vcn_box)
+                occupied.append(y)
             elif key == "service-gateway":
                 x = vcn_box.right + 0.32
                 y = self._avoid_gateway_overlap(
@@ -1804,6 +2040,18 @@ class Renderer:
             full_label = str(gateway.get("label") or "")
             if full_label and full_label != short_label:
                 self.icon_notes.add(f"{short_label}: {full_label}")
+
+    def _gateway_short_label(
+        self,
+        key: str,
+        gateway_type: str,
+        gateway: dict[str, Any],
+    ) -> str:
+        if gateway_type in {"local-peering-gateway", "lpg"}:
+            return "LPG"
+        if gateway_type in {"remote-peering-gateway", "remote-peering-connection", "rpg"}:
+            return "RPG"
+        return GATEWAY_SHORT_LABELS.get(key, str(gateway.get("label") or key))
 
     def _draw_resources(
         self,
@@ -1900,7 +2148,7 @@ class Renderer:
         columns = min(item_count, max_by_width, 5)
         while columns > 1:
             rows = int(math.ceil(item_count / columns))
-            if content.h / rows >= 0.62:
+            if rows == 1 or content.h / rows >= 0.62:
                 break
             columns -= 1
         return max(columns, 1)
@@ -1917,6 +2165,8 @@ class Renderer:
         horizontal_route_counts: dict[int, int] = {}
         source_label_counts, target_label_counts = self._flow_label_counts(flows)
         for flow in flows:
+            if isinstance(flow, dict) and self._is_peering_connection(flow):
+                continue
             source_id_raw = str(flow.get("from") or flow.get("source") or "")
             target_id_raw = str(flow.get("to") or flow.get("target") or "")
             source = self._box_for_endpoint(source_id_raw)
@@ -2032,6 +2282,53 @@ class Renderer:
             if key in layout:
                 return bool(layout[key])
         return True
+
+    def _draw_peering_exceptions(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        drawn: set[tuple[str, str]] = set()
+        for connection in list(model.get("connections") or []):
+            if not isinstance(connection, dict) or not self._is_peering_connection(connection):
+                continue
+            source_id = str(connection.get("from") or connection.get("source") or "")
+            target_id = str(connection.get("to") or connection.get("target") or "")
+            source = self._box_for_endpoint(source_id)
+            target = self._box_for_endpoint(target_id)
+            if not source or not target:
+                continue
+            key = tuple(sorted((normalize_lookup(source_id), normalize_lookup(target_id))))
+            if key in drawn:
+                continue
+            drawn.add(key)
+            start, end = self._edge_points(source, target)
+            slide.add_arrow(
+                f"Peering connection {source_id} to {target_id}",
+                start,
+                end,
+                arrow=False,
+            )
+
+    def _is_peering_connection(self, connection: dict[str, Any]) -> bool:
+        values = [
+            connection.get("type"),
+            connection.get("kind"),
+            connection.get("label"),
+            connection.get("id"),
+        ]
+        for value in values:
+            normalized = normalize_lookup(value)
+            compact = normalized.replace(" ", "").replace("-", "")
+            if compact in {
+                "localpeering",
+                "localpeeringgateway",
+                "lpg",
+                "remotepeering",
+                "remotepeeringgateway",
+                "remotepeeringconnection",
+                "rpg",
+            }:
+                return True
+            if "local peering" in normalized or "remote peering" in normalized:
+                return True
+        return False
 
     def _draw_data_guard_exceptions(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         resources = self._resources_by_id(model)
@@ -2426,7 +2723,7 @@ class Renderer:
         if show_external_label:
             slide.add_text(
                 f"Label {label}",
-                Box(icon_box.cx - label_width / 2, icon_box.bottom + 0.03, label_width, 0.27),
+                Box(icon_box.cx - label_width / 2, icon_box.bottom, label_width, 0.22),
                 label,
                 size_pt=label_size,
                 color="111827",
@@ -2563,11 +2860,23 @@ class Renderer:
             box = self._first_matching_box(lower, ["public", "edge", "dmz"])
             return (box.cy if box else vcn_box.y + 1.0) - 0.21
         if key == "nat-gateway":
-            box = self._first_matching_box(lower, ["app", "private"])
+            private_boxes = self._private_tier_boxes(subnet_boxes)
+            box = private_boxes[0] if private_boxes else self._first_matching_box(lower, ["private", "app"])
             return (box.cy if box else vcn_box.cy) - 0.21
         if key == "service-gateway":
             box = self._first_matching_box(lower, ["data", "db", "database"])
             return (box.cy if box else vcn_box.cy) - 0.21
+        if gateway_type in {
+            "local-peering-gateway",
+            "lpg",
+            "remote-peering-gateway",
+            "remote-peering-connection",
+            "rpg",
+        } or key == "remote-peering-gateway":
+            private_boxes = self._private_tier_boxes(subnet_boxes)
+            if len(private_boxes) >= 2:
+                return private_boxes[1].cy - STANDARD_ICON_SIZE / 2
+            return vcn_box.cy - 0.21
         if key == "dynamic-routing-gateway" or gateway_type in {"drg", "dynamic-routing-gateway"}:
             box = self._first_matching_box(lower, ["management", "mgmt", "security", "inspection"])
             return (box.cy if box else vcn_box.cy) - 0.21
@@ -2605,6 +2914,15 @@ class Renderer:
                 if term in name:
                     return box
         return None
+
+    def _private_tier_boxes(self, subnet_boxes: dict[str, Box]) -> list[Box]:
+        private_boxes: list[Box] = []
+        for name, box in subnet_boxes.items():
+            normalized = normalize_lookup(name)
+            if any(term in normalized for term in ("public", "edge", "dmz")):
+                continue
+            private_boxes.append(box)
+        return sorted(private_boxes, key=lambda item: item.y)
 
     def _box_for_endpoint(self, endpoint: str) -> Box | None:
         key = endpoint.lower()
@@ -2659,10 +2977,25 @@ class Renderer:
         return flows
 
     def _summary_lines(self, model: dict[str, Any]) -> list[str]:
-        vcn = model.get("vcn") or {}
-        subnets = list(vcn.get("subnets") or [])
+        vcns = self._model_vcns(model)
+        if vcns:
+            subnets = [
+                subnet
+                for vcn in vcns
+                for subnet in vcn.get("subnets") or []
+                if isinstance(subnet, dict)
+            ]
+            gateways = [
+                gateway
+                for vcn in vcns
+                for gateway in vcn.get("gateways") or []
+                if isinstance(gateway, dict)
+            ]
+        else:
+            vcn = model.get("vcn") or {}
+            subnets = list(vcn.get("subnets") or [])
+            gateways = list(vcn.get("gateways") or [])
         resources = list(model.get("resources") or [])
-        gateways = list(vcn.get("gateways") or [])
         external_networks = self._external_networks(model)
         connections = list(model.get("connections") or [])
         return [

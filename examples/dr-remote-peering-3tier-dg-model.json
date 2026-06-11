@@ -1,0 +1,359 @@
+{
+  "title": "OCI DR Architecture with Remote Peering and DataGuard",
+  "language": "ko",
+  "region": {
+    "name": "Multi-region",
+    "oci_region": "ap-seoul-1 / ap-chuncheon-1"
+  },
+  "layout": {
+    "subnet_columns": 1,
+    "show_flows": false
+  },
+  "assumptions": [
+    "Primary 리전은 Seoul(ap-seoul-1), DR 리전은 Chuncheon(ap-chuncheon-1)로 가정했습니다.",
+    "두 VCN은 서로 다른 리전에 있으므로 Remote Peering Gateway/Connection(RPG)으로 연결했습니다.",
+    "각 VCN은 Public, Web, App, DB 계층을 regional subnet으로 분리했습니다.",
+    "Web 서버 2대와 App 서버 2대는 각 리전에서 Fault Domain 분산을 전제로 표현했습니다.",
+    "DB는 Primary 리전의 Primary DB와 DR 리전의 Standby DB를 DataGuard로 복제하는 구조로 표현했습니다."
+  ],
+  "architecture_notes": [
+    "인터넷 진입점은 각 VCN의 Public LoadBalancer로 제한했습니다.",
+    "Web 서버는 Public LoadBalancer의 backend set으로, App 서버는 Private App LoadBalancer의 backend set으로 표현했습니다.",
+    "App 및 DB 계층은 private subnet에 배치하고 public access가 없도록 모델링했습니다.",
+    "Remote peering 경로는 VCN 간 사설 통신을 위한 네트워크 관계로 표현했으며, 워크로드 트래픽 선과 분리했습니다.",
+    "DataGuard 관계만 DB 간 직선 connection line과 label로 표시하고, 나머지 상세 트래픽과 보안 포트는 노트로 관리합니다.",
+    "NSG 정책은 LoadBalancer에서 backend, Web에서 Private App LoadBalancer, App에서 DB로 필요한 포트만 허용하는 것을 전제로 합니다."
+  ],
+  "vcns": [
+    {
+      "name": "Primary Application VCN",
+      "cidr": "10.10.0.0/16",
+      "region": {
+        "name": "Seoul",
+        "oci_region": "ap-seoul-1"
+      },
+      "subnets": [
+        {
+          "name": "Primary Public Subnet",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.10.1.0/24",
+          "resources": ["primary-public-lb"]
+        },
+        {
+          "name": "Primary Web Subnet",
+          "type": "private",
+          "tier": "web",
+          "cidr": "10.10.2.0/24",
+          "resources": ["primary-web-1", "primary-web-2"]
+        },
+        {
+          "name": "Primary App Subnet",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.10.3.0/24",
+          "resources": ["primary-app-lb", "primary-app-1", "primary-app-2"]
+        },
+        {
+          "name": "Primary DB Subnet",
+          "type": "private",
+          "tier": "data",
+          "cidr": "10.10.4.0/24",
+          "resources": ["primary-db"]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "primary-igw",
+          "type": "internet-gateway",
+          "label": "Internet Gateway"
+        },
+        {
+          "id": "primary-nat",
+          "type": "nat-gateway",
+          "label": "NAT Gateway"
+        },
+        {
+          "id": "primary-rpg",
+          "type": "remote-peering-gateway",
+          "label": "Remote Peering Gateway"
+        }
+      ]
+    },
+    {
+      "name": "DR Application VCN",
+      "cidr": "10.20.0.0/16",
+      "region": {
+        "name": "Chuncheon",
+        "oci_region": "ap-chuncheon-1"
+      },
+      "subnets": [
+        {
+          "name": "DR Public Subnet",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.20.1.0/24",
+          "resources": ["dr-public-lb"]
+        },
+        {
+          "name": "DR Web Subnet",
+          "type": "private",
+          "tier": "web",
+          "cidr": "10.20.2.0/24",
+          "resources": ["dr-web-1", "dr-web-2"]
+        },
+        {
+          "name": "DR App Subnet",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.20.3.0/24",
+          "resources": ["dr-app-lb", "dr-app-1", "dr-app-2"]
+        },
+        {
+          "name": "DR DB Subnet",
+          "type": "private",
+          "tier": "data",
+          "cidr": "10.20.4.0/24",
+          "resources": ["dr-db-standby"]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "dr-igw",
+          "type": "internet-gateway",
+          "label": "Internet Gateway"
+        },
+        {
+          "id": "dr-nat",
+          "type": "nat-gateway",
+          "label": "NAT Gateway"
+        },
+        {
+          "id": "dr-rpg",
+          "type": "remote-peering-gateway",
+          "label": "Remote Peering Gateway"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "primary-public-lb",
+      "type": "load-balancer",
+      "label": "Primary Public LB",
+      "subnet": "Primary Public Subnet",
+      "count": 1,
+      "ha_group": "primary-public-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Regional public LoadBalancer distributes traffic to Primary Web Server 1 and 2."]
+    },
+    {
+      "id": "primary-web-1",
+      "type": "web-server",
+      "label": "Primary Web 1",
+      "subnet": "Primary Web Subnet",
+      "count": 1,
+      "ha_group": "primary-web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "primary-web-2",
+      "type": "web-server",
+      "label": "Primary Web 2",
+      "subnet": "Primary Web Subnet",
+      "count": 1,
+      "ha_group": "primary-web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "primary-app-lb",
+      "type": "load-balancer",
+      "label": "Primary App LB",
+      "subnet": "Primary App Subnet",
+      "count": 1,
+      "ha_group": "primary-app-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Private LoadBalancer with Primary App Server 1 and 2 backend set."]
+    },
+    {
+      "id": "primary-app-1",
+      "type": "app-server",
+      "label": "Primary App 1",
+      "subnet": "Primary App Subnet",
+      "count": 1,
+      "ha_group": "primary-app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "primary-app-2",
+      "type": "app-server",
+      "label": "Primary App 2",
+      "subnet": "Primary App Subnet",
+      "count": 1,
+      "ha_group": "primary-app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "primary-db",
+      "type": "database",
+      "label": "Primary DB",
+      "subnet": "Primary DB Subnet",
+      "count": 1,
+      "ha_group": "data-guard",
+      "icon_key": "database",
+      "notes": ["Primary database"]
+    },
+    {
+      "id": "dr-public-lb",
+      "type": "load-balancer",
+      "label": "DR Public LB",
+      "subnet": "DR Public Subnet",
+      "count": 1,
+      "ha_group": "dr-public-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Regional public LoadBalancer distributes traffic to DR Web Server 1 and 2."]
+    },
+    {
+      "id": "dr-web-1",
+      "type": "web-server",
+      "label": "DR Web 1",
+      "subnet": "DR Web Subnet",
+      "count": 1,
+      "ha_group": "dr-web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "dr-web-2",
+      "type": "web-server",
+      "label": "DR Web 2",
+      "subnet": "DR Web Subnet",
+      "count": 1,
+      "ha_group": "dr-web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "dr-app-lb",
+      "type": "load-balancer",
+      "label": "DR App LB",
+      "subnet": "DR App Subnet",
+      "count": 1,
+      "ha_group": "dr-app-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Private LoadBalancer with DR App Server 1 and 2 backend set."]
+    },
+    {
+      "id": "dr-app-1",
+      "type": "app-server",
+      "label": "DR App 1",
+      "subnet": "DR App Subnet",
+      "count": 1,
+      "ha_group": "dr-app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "dr-app-2",
+      "type": "app-server",
+      "label": "DR App 2",
+      "subnet": "DR App Subnet",
+      "count": 1,
+      "ha_group": "dr-app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "dr-db-standby",
+      "type": "database",
+      "label": "DR DB Standby",
+      "subnet": "DR DB Subnet",
+      "count": 1,
+      "ha_group": "data-guard",
+      "icon_key": "database",
+      "notes": ["DataGuard standby database"]
+    }
+  ],
+  "flows": [
+    {
+      "from": "internet",
+      "to": "primary-public-lb",
+      "label": "HTTPS 443",
+      "security": "Allow public HTTPS to Primary Public LoadBalancer only"
+    },
+    {
+      "from": "primary-public-lb",
+      "to": "primary-web-1",
+      "label": "Web backend set",
+      "security": "Allow from LoadBalancer NSG only"
+    },
+    {
+      "from": "primary-public-lb",
+      "to": "primary-web-2",
+      "label": "Web backend set",
+      "security": "Allow from LoadBalancer NSG only"
+    },
+    {
+      "from": "primary-web-1",
+      "to": "primary-app-lb",
+      "label": "Private App LB",
+      "security": "Allow only from Web tier NSG"
+    },
+    {
+      "from": "primary-web-2",
+      "to": "primary-app-lb",
+      "label": "Private App LB",
+      "security": "Allow only from Web tier NSG"
+    },
+    {
+      "from": "primary-app-lb",
+      "to": "primary-app-1",
+      "label": "App backend set",
+      "security": "Allow from Private App LoadBalancer NSG only"
+    },
+    {
+      "from": "primary-app-lb",
+      "to": "primary-app-2",
+      "label": "App backend set",
+      "security": "Allow from Private App LoadBalancer NSG only"
+    },
+    {
+      "from": "primary-app-1",
+      "to": "primary-db",
+      "label": "DB port",
+      "security": "Allow only required DB port from App tier NSG"
+    },
+    {
+      "from": "primary-app-2",
+      "to": "primary-db",
+      "label": "DB port",
+      "security": "Allow only required DB port from App tier NSG"
+    }
+  ],
+  "connections": [
+    {
+      "id": "remote-peering",
+      "type": "remote-peering",
+      "from": "primary-rpg",
+      "to": "dr-rpg",
+      "label": "RPG",
+      "arrow": false
+    },
+    {
+      "id": "data-guard",
+      "type": "replication",
+      "from": "primary-db",
+      "to": "dr-db-standby",
+      "label": "DataGuard",
+      "arrow": false
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}
