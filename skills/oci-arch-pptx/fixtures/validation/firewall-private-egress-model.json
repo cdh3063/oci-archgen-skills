@@ -1,0 +1,105 @@
+{
+  "title": "Fixture - Firewall NAT SGW Private Egress",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "Private application egress is split between NAT Gateway and Service Gateway."
+  ],
+  "architecture_notes": [
+    "Network Firewall is placed in the security inspection subnet."
+  ],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "object-storage",
+        "type": "Object Storage",
+        "label": "Object Storage"
+      },
+      {
+        "id": "logging",
+        "type": "Logging",
+        "label": "Logging"
+      }
+    ]
+  },
+  "vcn": {
+    "name": "Private Egress VCN",
+    "cidr": "10.80.0.0/16",
+    "subnets": [
+      {
+        "name": "Public Edge Subnet",
+        "type": "public",
+        "tier": "edge",
+        "cidr": "10.80.0.0/24"
+      },
+      {
+        "name": "Security Inspection Subnet",
+        "type": "private",
+        "tier": "security",
+        "cidr": "10.80.1.0/24"
+      },
+      {
+        "name": "Private App Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.80.2.0/24"
+      }
+    ],
+    "gateways": [
+      {
+        "id": "igw-1",
+        "type": "internet-gateway",
+        "label": "Internet Gateway"
+      },
+      {
+        "id": "nat-1",
+        "type": "nat-gateway",
+        "label": "NAT Gateway"
+      },
+      {
+        "id": "sgw-1",
+        "type": "service-gateway",
+        "label": "Service Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "firewall",
+      "type": "Network Firewall",
+      "label": "Network Firewall",
+      "count": 1
+    },
+    {
+      "id": "app",
+      "type": "Compute",
+      "label": "Private Application",
+      "count": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "app",
+      "to": "firewall",
+      "label": "Egress inspect"
+    },
+    {
+      "from": "firewall",
+      "to": "nat-1",
+      "label": "Internet egress"
+    },
+    {
+      "from": "app",
+      "to": "object-storage",
+      "label": "Object API"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

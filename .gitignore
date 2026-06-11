@@ -1,0 +1,23 @@
+.DS_Store
+Thumbs.db
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+.venv/
+venv/
+env/
+
+tmp/
+dist/
+build/
+
+*.log
+
+# Local/generated decks outside curated examples.
+*.generated.pptx
+*-preview/
+*-preview-*/

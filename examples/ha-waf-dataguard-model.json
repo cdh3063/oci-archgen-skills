@@ -1,0 +1,259 @@
+{
+  "title": "OCI HA Architecture with WAF and Data Guard",
+  "language": "ko",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "layout": {
+    "subnet_columns": 2,
+    "show_flows": false
+  },
+  "assumptions": [
+    "리전은 별도 지정이 없어 Seoul(ap-seoul-1)을 사용했습니다.",
+    "VCN CIDR은 10.0.0.0/16, 서브넷은 계층별 /24 regional subnet으로 가정했습니다.",
+    "Web 서버 2대와 App 서버 2대는 각각 Fault Domain 분산을 전제로 표현했습니다.",
+    "Data Guard는 동일 리전 내 DB Primary/Standby 구성으로 표현했습니다."
+  ],
+  "architecture_notes": [
+    "WAF와 Public LoadBalancer는 Public Edge Subnet에 배치했습니다.",
+    "Web/App/DB 계층은 private subnet에 배치하고, DB는 public access가 없도록 모델링했습니다.",
+    "Public LoadBalancer는 Web 서버 2대를 backend set으로 사용합니다.",
+    "Private App LoadBalancer는 App 서버 2대를 backend set으로 사용합니다.",
+    "Public LoadBalancer에서 Web 계층, Web 계층에서 Private App LoadBalancer, App 계층에서 DB 계층으로만 필요한 포트를 허용하는 NSG 정책을 전제로 합니다.",
+    "DB 백업 및 Oracle public service 접근은 Service Gateway를 통한 Object Storage private access로 표현했습니다.",
+    "Private subnet의 패치/외부 업데이트 경로는 NAT Gateway를 사용하도록 표현했습니다."
+  ],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "object-storage",
+        "type": "Object Storage",
+        "label": "Object Storage",
+        "icon_key": "object-storage"
+      }
+    ]
+  },
+  "vcn": {
+    "name": "HA Application VCN",
+    "cidr": "10.0.0.0/16",
+    "subnets": [
+      {
+        "name": "Public Edge Subnet",
+        "type": "public",
+        "tier": "edge",
+        "cidr": "10.0.1.0/24",
+        "resources": ["waf-1", "lb-1"]
+      },
+      {
+        "name": "Private Web Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.0.2.0/24",
+        "resources": ["web-1", "web-2"]
+      },
+      {
+        "name": "Private App Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.0.3.0/24",
+        "resources": ["app-lb-1", "app-1", "app-2"]
+      },
+      {
+        "name": "Private DB Subnet",
+        "type": "private",
+        "tier": "data",
+        "cidr": "10.0.4.0/24",
+        "resources": ["db-primary", "db-standby"]
+      }
+    ],
+    "gateways": [
+      {
+        "id": "igw-1",
+        "type": "internet-gateway",
+        "label": "Internet Gateway"
+      },
+      {
+        "id": "nat-1",
+        "type": "nat-gateway",
+        "label": "NAT Gateway"
+      },
+      {
+        "id": "sgw-1",
+        "type": "service-gateway",
+        "label": "Service Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "waf-1",
+      "type": "waf",
+      "label": "WAF",
+      "subnet": "Public Edge Subnet",
+      "count": 1,
+      "ha_group": null,
+      "icon_key": "waf",
+      "notes": ["Internet-facing WAF policy protects the public endpoint."]
+    },
+    {
+      "id": "lb-1",
+      "type": "load-balancer",
+      "label": "Public LoadBalancer",
+      "subnet": "Public Edge Subnet",
+      "count": 1,
+      "ha_group": "regional-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Regional public LoadBalancer distributes traffic to redundant web servers."]
+    },
+    {
+      "id": "web-1",
+      "type": "web-server",
+      "label": "Web Server 1",
+      "subnet": "Private Web Subnet",
+      "count": 1,
+      "ha_group": "web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "web-2",
+      "type": "web-server",
+      "label": "Web Server 2",
+      "subnet": "Private Web Subnet",
+      "count": 1,
+      "ha_group": "web-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "app-lb-1",
+      "type": "load-balancer",
+      "label": "Private App LoadBalancer",
+      "subnet": "Private App Subnet",
+      "count": 1,
+      "ha_group": "private-app-lb",
+      "icon_key": "load-balancer",
+      "notes": ["Private LoadBalancer with App Server 1 and App Server 2 backend set."]
+    },
+    {
+      "id": "app-1",
+      "type": "app-server",
+      "label": "App Server 1",
+      "subnet": "Private App Subnet",
+      "count": 1,
+      "ha_group": "app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 1"]
+    },
+    {
+      "id": "app-2",
+      "type": "app-server",
+      "label": "App Server 2",
+      "subnet": "Private App Subnet",
+      "count": 1,
+      "ha_group": "app-ha",
+      "icon_key": "compute",
+      "notes": ["Fault Domain 2"]
+    },
+    {
+      "id": "db-primary",
+      "type": "database",
+      "label": "DB Primary",
+      "subnet": "Private DB Subnet",
+      "count": 1,
+      "ha_group": "data-guard",
+      "icon_key": "database",
+      "notes": ["Primary database"]
+    },
+    {
+      "id": "db-standby",
+      "type": "database",
+      "label": "DB Standby",
+      "subnet": "Private DB Subnet",
+      "count": 1,
+      "ha_group": "data-guard",
+      "icon_key": "database",
+      "notes": ["Data Guard standby database"]
+    }
+  ],
+  "flows": [
+    {
+      "from": "internet",
+      "to": "waf-1",
+      "label": "HTTPS 443",
+      "security": "Allow public HTTPS to WAF only"
+    },
+    {
+      "from": "waf-1",
+      "to": "lb-1",
+      "label": "HTTPS 443",
+      "security": "WAF forwards approved requests"
+    },
+    {
+      "from": "lb-1",
+      "to": "web-1",
+      "label": "Web tier",
+      "security": "Allow from LoadBalancer NSG only"
+    },
+    {
+      "from": "lb-1",
+      "to": "web-2",
+      "label": "Web tier",
+      "security": "Allow from LoadBalancer NSG only"
+    },
+    {
+      "from": "web-1",
+      "to": "app-lb-1",
+      "label": "App API",
+      "security": "Allow only from Web tier NSG"
+    },
+    {
+      "from": "web-2",
+      "to": "app-lb-1",
+      "label": "App API",
+      "security": "Allow only from Web tier NSG"
+    },
+    {
+      "from": "app-lb-1",
+      "to": "app-1",
+      "label": "App backend set",
+      "security": "Allow only from Private App LoadBalancer NSG"
+    },
+    {
+      "from": "app-lb-1",
+      "to": "app-2",
+      "label": "App backend set",
+      "security": "Allow only from Private App LoadBalancer NSG"
+    },
+    {
+      "from": "app-1",
+      "to": "db-primary",
+      "label": "DB service",
+      "security": "Allow DB listener from App NSG only"
+    },
+    {
+      "from": "app-2",
+      "to": "db-primary",
+      "label": "DB service",
+      "security": "Allow DB listener from App NSG only"
+    },
+    {
+      "from": "db-primary",
+      "to": "db-standby",
+      "label": "DataGuard",
+      "security": "Database replication traffic only"
+    },
+    {
+      "from": "db-primary",
+      "to": "object-storage",
+      "label": "Backup",
+      "security": "Private access through Service Gateway"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

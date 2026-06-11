@@ -1,0 +1,1643 @@
+{
+  "_metadata": {
+    "source_drawio_library": "/Users/ddchoi/Downloads/OCI Style Guide for Drawio/OCI Library.xml",
+    "item_count": 223,
+    "matched_icon_count": 163,
+    "notes": [
+      "draw.io library entries are compressed mxGraph XML.",
+      "OCI icons are vector stencil paths, not embedded data:image assets."
+    ]
+  },
+  "matches": [
+    {
+      "icon_key": "active-directory",
+      "score": 1.0,
+      "title": "Identity and Security - Active Directory",
+      "item_index": 115,
+      "item_width": 128.99999999999994,
+      "item_height": 106.00000000000007,
+      "asset_path": "assets/extracted-icons/active-directory.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "adb-d",
+      "score": 1.0,
+      "title": "Database - ADB-D",
+      "item_index": 38,
+      "item_width": 77.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/adb-d.svg",
+      "stencil_count": 20
+    },
+    {
+      "icon_key": "adw-d",
+      "score": 1.0,
+      "title": "Database - ADW-D",
+      "item_index": 40,
+      "item_width": 77.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/adw-d.svg",
+      "stencil_count": 16
+    },
+    {
+      "icon_key": "alarms",
+      "score": 1.0,
+      "title": "Observability and Management - Alarms",
+      "item_index": 121,
+      "item_width": 82.00000000000014,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/alarms.svg",
+      "stencil_count": 17
+    },
+    {
+      "icon_key": "analytics-and-ai",
+      "score": 1.0,
+      "title": "Analytics and AI",
+      "item_index": 60,
+      "item_width": 87.00000000000014,
+      "item_height": 96.00000000000007,
+      "asset_path": "assets/extracted-icons/analytics-and-ai.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "analytics-and-ai-data-catalog",
+      "score": 1.0,
+      "title": "Analytics and AI -&amp;nbsp;Data Catalog",
+      "item_index": 62,
+      "item_width": 105.0,
+      "item_height": 100.0,
+      "asset_path": "assets/extracted-icons/analytics-and-ai-data-catalog.svg",
+      "stencil_count": 18
+    },
+    {
+      "icon_key": "analytics-and-ai-data-flow",
+      "score": 1.0,
+      "title": "Analytics and AI -&amp;nbsp;Data Flow",
+      "item_index": 64,
+      "item_width": 82.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/analytics-and-ai-data-flow.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "analytics-and-ai-data-integration",
+      "score": 1.0,
+      "title": "Analytics and AI -&amp;nbsp;Data Integration",
+      "item_index": 63,
+      "item_width": 93.99999999999994,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/analytics-and-ai-data-integration.svg",
+      "stencil_count": 12
+    },
+    {
+      "icon_key": "apex",
+      "score": 1.0,
+      "title": "Developer Services - APEX",
+      "item_index": 77,
+      "item_width": 83.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/apex.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "api-gateway",
+      "score": 1.0,
+      "title": "Developer Services - API Gateway",
+      "item_index": 79,
+      "item_width": 102.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/api-gateway.svg",
+      "stencil_count": 12
+    },
+    {
+      "icon_key": "api-service",
+      "score": 1.0,
+      "title": "Developer Services - API Service",
+      "item_index": 80,
+      "item_width": 94.00000000000027,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/api-service.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "application-performance-management",
+      "score": 1.0,
+      "title": "Observability and Management - Application Performance Management",
+      "item_index": 116,
+      "item_width": 107.00000000000014,
+      "item_height": 123.00000000000004,
+      "asset_path": "assets/extracted-icons/application-performance-management.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "artificial-intelligence",
+      "score": 1.0,
+      "title": "Analytics and AI - Artificial Intelligence",
+      "item_index": 69,
+      "item_width": 99.00000000000027,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/artificial-intelligence.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "atp-d",
+      "score": 1.0,
+      "title": "Database - ATP-D",
+      "item_index": 42,
+      "item_width": 84.00000000000027,
+      "item_height": 105.0,
+      "asset_path": "assets/extracted-icons/atp-d.svg",
+      "stencil_count": 27
+    },
+    {
+      "icon_key": "audit",
+      "score": 1.0,
+      "title": "Observability and Management - Auditing",
+      "item_index": 119,
+      "item_width": 83.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/audit.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "autonomous-data-warehouse-adw",
+      "score": 1.0,
+      "title": "Database - Autonomous Data Warehouse ADW",
+      "item_index": 39,
+      "item_width": 105.0,
+      "item_height": 142.00000000000014,
+      "asset_path": "assets/extracted-icons/autonomous-data-warehouse-adw.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "autonomous-db",
+      "score": 1.0,
+      "title": "Database - Autonomous DB",
+      "item_index": 37,
+      "item_width": 103.99999999999994,
+      "item_height": 117.00000000000014,
+      "asset_path": "assets/extracted-icons/autonomous-db.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "autonomous-transaction-processing-atp",
+      "score": 1.0,
+      "title": "Database - Autonomous Transaction Processing ATP",
+      "item_index": 41,
+      "item_width": 147.9999999999999,
+      "item_height": 134.0000000000001,
+      "asset_path": "assets/extracted-icons/autonomous-transaction-processing-atp.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "autoscaling",
+      "score": 1.0,
+      "title": "Compute - Autoscaling",
+      "item_index": 4,
+      "item_width": 97.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/autoscaling.svg",
+      "stencil_count": 35
+    },
+    {
+      "icon_key": "back-up-restore",
+      "score": 1.0,
+      "title": "Storage - Back up Restore",
+      "item_index": 8,
+      "item_width": 89.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/back-up-restore.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "backbone",
+      "score": 1.0,
+      "title": "Networking - Backbone",
+      "item_index": 27,
+      "item_width": 84.00000000000027,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/backbone.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "bare-metal-compute",
+      "score": 1.0,
+      "title": "Compute - Bare Metal Compute",
+      "item_index": 0,
+      "item_width": 87.00000000000014,
+      "item_height": 122.00000000000014,
+      "asset_path": "assets/extracted-icons/bare-metal-compute.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "bastion",
+      "score": 1.0,
+      "title": "Identity and Security - Bastion",
+      "item_index": 106,
+      "item_width": 70.0,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/bastion.svg",
+      "stencil_count": 12
+    },
+    {
+      "icon_key": "bi-cloud-connector",
+      "score": 1.0,
+      "title": "Applications - BI Cloud Connector",
+      "item_index": 145,
+      "item_width": 95.0,
+      "item_height": 110.99999999999991,
+      "asset_path": "assets/extracted-icons/bi-cloud-connector.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "big-data",
+      "score": 1.0,
+      "title": "Analytics and AI - Big Data",
+      "item_index": 61,
+      "item_width": 83.99999999999994,
+      "item_height": 107.00000000000014,
+      "asset_path": "assets/extracted-icons/big-data.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "block-storage",
+      "score": 1.0,
+      "title": "Storage - Block Storage",
+      "item_index": 7,
+      "item_width": 113.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/block-storage.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "block-storage-cloning",
+      "score": 1.0,
+      "title": "Storage - Block Storage Cloning",
+      "item_index": 9,
+      "item_width": 110.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/block-storage-cloning.svg",
+      "stencil_count": 16
+    },
+    {
+      "icon_key": "buckets",
+      "score": 1.0,
+      "title": "Storage - Buckets",
+      "item_index": 12,
+      "item_width": 84.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/buckets.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "burstable-virtual-machine-burstable-vm",
+      "score": 1.0,
+      "title": "Compute - Burstable Virtual Machine Burstable VM",
+      "item_index": 6,
+      "item_width": 108.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/burstable-virtual-machine-burstable-vm.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "byoip",
+      "score": 1.0,
+      "title": "Networking - BYOIP",
+      "item_index": 22,
+      "item_width": 84.00000000000027,
+      "item_height": 77.00000000000013,
+      "asset_path": "assets/extracted-icons/byoip.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "cdn",
+      "score": 1.0,
+      "title": "Networking - CDN",
+      "item_index": 25,
+      "item_width": 84.00000000000027,
+      "item_height": 102.00000000000014,
+      "asset_path": "assets/extracted-icons/cdn.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "certificates",
+      "score": 1.0,
+      "title": "Identity and Security - Certificates",
+      "item_index": 103,
+      "item_width": 91.00000000000007,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/certificates.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "cloud",
+      "score": 1.0,
+      "title": "Cloud",
+      "item_index": 157,
+      "item_width": 83.99999999999994,
+      "item_height": 68.00000000000004,
+      "asset_path": "assets/extracted-icons/cloud.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "cloud-advisor",
+      "score": 1.0,
+      "title": "Governance and Administration - Cloud Advisor",
+      "item_index": 131,
+      "item_width": 83.99999999999994,
+      "item_height": 124.0000000000001,
+      "asset_path": "assets/extracted-icons/cloud-advisor.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "cloud-guard",
+      "score": 1.0,
+      "title": "Identity and Security - Cloud Guard",
+      "item_index": 97,
+      "item_width": 117.99999999999987,
+      "item_height": 100.0,
+      "asset_path": "assets/extracted-icons/cloud-guard.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "compartments",
+      "score": 1.0,
+      "title": "Identity and Security - Compartments",
+      "item_index": 96,
+      "item_width": 134.00000000000026,
+      "item_height": 92.00000000000014,
+      "asset_path": "assets/extracted-icons/compartments.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "compute",
+      "score": 1.0,
+      "title": "Compute - Virtual Machine VM",
+      "item_index": 3,
+      "item_width": 84.0,
+      "item_height": 130.0,
+      "asset_path": "assets/extracted-icons/compute.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "container",
+      "score": 1.0,
+      "title": "Container",
+      "item_index": 162,
+      "item_width": 83.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/container.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "container-engine-for-kubernetes",
+      "score": 1.0,
+      "title": "Developer Services - Container Engine for Kubernetes",
+      "item_index": 74,
+      "item_width": 137.9999999999999,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/container-engine-for-kubernetes.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "container-registry",
+      "score": 1.0,
+      "title": "Developer Services - Container Registry",
+      "item_index": 75,
+      "item_width": 83.99999999999994,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/container-registry.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "content-management",
+      "score": 1.0,
+      "title": "Developer Services - Content Management",
+      "item_index": 87,
+      "item_width": 117.99999999999987,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/content-management.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "cpq",
+      "score": 1.0,
+      "title": "Applications - CPQ",
+      "item_index": 150,
+      "item_width": 85.0,
+      "item_height": 103.99999999999994,
+      "asset_path": "assets/extracted-icons/cpq.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "customer-data-center",
+      "score": 1.0,
+      "title": "Networking - Customer Data Center",
+      "item_index": 26,
+      "item_width": 105.0,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/customer-data-center.svg",
+      "stencil_count": 13
+    },
+    {
+      "icon_key": "customer-premises-equipment-cpe",
+      "score": 1.0,
+      "title": "Networking - Customer Premises Equipment CPE",
+      "item_index": 21,
+      "item_width": 97.99999999999987,
+      "item_height": 142.00000000000014,
+      "asset_path": "assets/extracted-icons/customer-premises-equipment-cpe.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "data-safe",
+      "score": 1.0,
+      "title": "Database - Data Safe",
+      "item_index": 45,
+      "item_width": 87.00000000000014,
+      "item_height": 108.00000000000004,
+      "asset_path": "assets/extracted-icons/data-safe.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "data-science",
+      "score": 1.0,
+      "title": "Analytics and AI - Data Science",
+      "item_index": 68,
+      "item_width": 110.0,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/data-science.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "database",
+      "score": 1.0,
+      "title": "Database - Database System",
+      "item_index": 36,
+      "item_width": 82.99999999999987,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/database.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "database-database",
+      "score": 1.0,
+      "title": "Database",
+      "item_index": 35,
+      "item_width": 83.99999999999994,
+      "item_height": 104.0000000000001,
+      "asset_path": "assets/extracted-icons/database-database.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "database-management",
+      "score": 1.0,
+      "title": "Database Management",
+      "item_index": 158,
+      "item_width": 135.0,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/database-management.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "ddos-protection",
+      "score": 1.0,
+      "title": "Identity and Security - DDoS Protection",
+      "item_index": 109,
+      "item_width": 89.00000000000027,
+      "item_height": 118.0000000000002,
+      "asset_path": "assets/extracted-icons/ddos-protection.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "dedicated-region",
+      "score": 1.0,
+      "title": "Migration - Dedicated Region",
+      "item_index": 130,
+      "item_width": 83.99999999999994,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/dedicated-region.svg",
+      "stencil_count": 16
+    },
+    {
+      "icon_key": "devops",
+      "score": 1.0,
+      "title": "Developer Services - DevOps",
+      "item_index": 85,
+      "item_width": 81.00000000000007,
+      "item_height": 108.99999999999994,
+      "asset_path": "assets/extracted-icons/devops.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "digital-assistant",
+      "score": 1.0,
+      "title": "Analytics and AI - Digital Assistant",
+      "item_index": 70,
+      "item_width": 92.00000000000014,
+      "item_height": 114.0000000000001,
+      "asset_path": "assets/extracted-icons/digital-assistant.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "digital-media",
+      "score": 1.0,
+      "title": "Digital Media",
+      "item_index": 160,
+      "item_width": 83.99999999999994,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/digital-media.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "dns",
+      "score": 1.0,
+      "title": "Networking - DNS",
+      "item_index": 20,
+      "item_width": 83.99999999999994,
+      "item_height": 104.0000000000001,
+      "asset_path": "assets/extracted-icons/dns.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "dynamic-routing-gateway",
+      "score": 1.0,
+      "title": "Networking - Dynamic Routing Gateway DRG",
+      "item_index": 30,
+      "item_width": 135.0,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/dynamic-routing-gateway.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "e-business-suite",
+      "score": 1.0,
+      "title": "Applications - E-Business Suite",
+      "item_index": 139,
+      "item_width": 92.00000000000014,
+      "item_height": 127.99999999999987,
+      "asset_path": "assets/extracted-icons/e-business-suite.svg",
+      "stencil_count": 23
+    },
+    {
+      "icon_key": "elastic-performance",
+      "score": 1.0,
+      "title": "Storage - Elastic Performance",
+      "item_index": 14,
+      "item_width": 118.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/elastic-performance.svg",
+      "stencil_count": 22
+    },
+    {
+      "icon_key": "email-delivery",
+      "score": 1.0,
+      "title": "Developer Services - Email Delivery",
+      "item_index": 83,
+      "item_width": 117.00000000000014,
+      "item_height": 82.00000000000014,
+      "asset_path": "assets/extracted-icons/email-delivery.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "encryption",
+      "score": 1.0,
+      "title": "Identity and Security - Encryption",
+      "item_index": 112,
+      "item_width": 97.00000000000014,
+      "item_height": 109.00000000000027,
+      "asset_path": "assets/extracted-icons/encryption.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "engagement",
+      "score": 1.0,
+      "title": "Applications - Engagement",
+      "item_index": 147,
+      "item_width": 112.00000000000014,
+      "item_height": 103.99999999999994,
+      "asset_path": "assets/extracted-icons/engagement.svg",
+      "stencil_count": 27
+    },
+    {
+      "icon_key": "epm",
+      "score": 1.0,
+      "title": "Applications - EPM",
+      "item_index": 155,
+      "item_width": 84.00000000000027,
+      "item_height": 103.99999999999994,
+      "asset_path": "assets/extracted-icons/epm.svg",
+      "stencil_count": 23
+    },
+    {
+      "icon_key": "erp",
+      "score": 1.0,
+      "title": "Applications - ERP",
+      "item_index": 138,
+      "item_width": 83.99999999999994,
+      "item_height": 90.99999999999991,
+      "asset_path": "assets/extracted-icons/erp.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "essbase",
+      "score": 1.0,
+      "title": "Analytics and AI - Essbase",
+      "item_index": 71,
+      "item_width": 81.00000000000007,
+      "item_height": 108.99999999999994,
+      "asset_path": "assets/extracted-icons/essbase.svg",
+      "stencil_count": 13
+    },
+    {
+      "icon_key": "exadata-c-c",
+      "score": 1.0,
+      "title": "Database - Exadata C@C",
+      "item_index": 44,
+      "item_width": 117.00000000000014,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/exadata-c-c.svg",
+      "stencil_count": 31
+    },
+    {
+      "icon_key": "exadata-database-service",
+      "score": 1.0,
+      "title": "Database - Exadata",
+      "item_index": 43,
+      "item_width": 77.99999999999987,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/exadata-database-service.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "file-storage",
+      "score": 1.0,
+      "title": "Storage - File Storage",
+      "item_index": 10,
+      "item_width": 92.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/file-storage.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "financials",
+      "score": 1.0,
+      "title": "Applications - Financials",
+      "item_index": 153,
+      "item_width": 90.0,
+      "item_height": 106.00000000000007,
+      "asset_path": "assets/extracted-icons/financials.svg",
+      "stencil_count": 16
+    },
+    {
+      "icon_key": "flex-virtual-machine-flex-vm",
+      "score": 1.0,
+      "title": "Compute - Flex Virtual Machine Flex VM",
+      "item_index": 5,
+      "item_width": 84.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/flex-virtual-machine-flex-vm.svg",
+      "stencil_count": 18
+    },
+    {
+      "icon_key": "flexible-load-balancer",
+      "score": 1.0,
+      "title": "Networking - Flexible Load Balancer",
+      "item_index": 19,
+      "item_width": 102.00000000000014,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/flexible-load-balancer.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "functions",
+      "score": 1.0,
+      "title": "Compute - Functions",
+      "item_index": 2,
+      "item_width": 84.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/functions.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "fusion",
+      "score": 1.0,
+      "title": "Applications - Fusion",
+      "item_index": 156,
+      "item_width": 84.00000000000027,
+      "item_height": 108.99999999999994,
+      "asset_path": "assets/extracted-icons/fusion.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "goldengate",
+      "score": 1.0,
+      "title": "Database - GoldenGate",
+      "item_index": 51,
+      "item_width": 100.0,
+      "item_height": 88.0000000000002,
+      "asset_path": "assets/extracted-icons/goldengate.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "goldengate-application-adapter",
+      "score": 1.0,
+      "title": "Database - GoldenGate Application Adapter",
+      "item_index": 54,
+      "item_width": 100.0,
+      "item_height": 144.00000000000026,
+      "asset_path": "assets/extracted-icons/goldengate-application-adapter.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "goldengate-director",
+      "score": 1.0,
+      "title": "Database - GoldenGate Director",
+      "item_index": 52,
+      "item_width": 96.00000000000007,
+      "item_height": 119.00000000000027,
+      "asset_path": "assets/extracted-icons/goldengate-director.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "goldengate-hp-non-stop-guardian",
+      "score": 1.0,
+      "title": "Database - GoldenGate HP Non-Stop Guardian",
+      "item_index": 59,
+      "item_width": 112.00000000000014,
+      "item_height": 132.00000000000014,
+      "asset_path": "assets/extracted-icons/goldengate-hp-non-stop-guardian.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "goldengate-monitor",
+      "score": 1.0,
+      "title": "Database - GoldenGate Monitor",
+      "item_index": 58,
+      "item_width": 95.99999999999974,
+      "item_height": 119.00000000000027,
+      "asset_path": "assets/extracted-icons/goldengate-monitor.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "goldengate-on-premises",
+      "score": 1.0,
+      "title": "Database - GoldenGate On-Premises",
+      "item_index": 50,
+      "item_width": 108.99999999999994,
+      "item_height": 93.0000000000002,
+      "asset_path": "assets/extracted-icons/goldengate-on-premises.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "goldengate-plug-in",
+      "score": 1.0,
+      "title": "Database - GoldenGate Plug-in",
+      "item_index": 55,
+      "item_width": 95.99999999999974,
+      "item_height": 118.0000000000002,
+      "asset_path": "assets/extracted-icons/goldengate-plug-in.svg",
+      "stencil_count": 18
+    },
+    {
+      "icon_key": "goldengate-stream-analytics",
+      "score": 1.0,
+      "title": "Database - GoldenGate Stream Analytics",
+      "item_index": 56,
+      "item_width": 104.00000000000027,
+      "item_height": 132.00000000000014,
+      "asset_path": "assets/extracted-icons/goldengate-stream-analytics.svg",
+      "stencil_count": 12
+    },
+    {
+      "icon_key": "goldengate-studio",
+      "score": 1.0,
+      "title": "Database - GoldenGate Studio",
+      "item_index": 53,
+      "item_width": 103.99999999999994,
+      "item_height": 119.00000000000027,
+      "asset_path": "assets/extracted-icons/goldengate-studio.svg",
+      "stencil_count": 20
+    },
+    {
+      "icon_key": "goldengate-veridata",
+      "score": 1.0,
+      "title": "Database - GoldenGate Veridata",
+      "item_index": 57,
+      "item_width": 100.0,
+      "item_height": 119.00000000000027,
+      "asset_path": "assets/extracted-icons/goldengate-veridata.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "hcm",
+      "score": 1.0,
+      "title": "Applications - HCM",
+      "item_index": 137,
+      "item_width": 85.0,
+      "item_height": 87.99999999999987,
+      "asset_path": "assets/extracted-icons/hcm.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "health-checks",
+      "score": 1.0,
+      "title": "Observability and Management - Health Checks",
+      "item_index": 122,
+      "item_width": 62.99999999999987,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/health-checks.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "healthcare",
+      "score": 1.0,
+      "title": "Applications - Healthcare",
+      "item_index": 154,
+      "item_width": 85.99999999999974,
+      "item_height": 97.00000000000014,
+      "asset_path": "assets/extracted-icons/healthcare.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "iam",
+      "score": 1.0,
+      "title": "Identity and Security - IAM Identity and Access Management",
+      "item_index": 107,
+      "item_width": 84.00000000000027,
+      "item_height": 104.0000000000001,
+      "asset_path": "assets/extracted-icons/iam.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "identity",
+      "score": 1.0,
+      "title": "Identity and Security - Identity",
+      "item_index": 99,
+      "item_width": 89.00000000000027,
+      "item_height": 101.00000000000007,
+      "asset_path": "assets/extracted-icons/identity.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "innovation-management",
+      "score": 1.0,
+      "title": "Applications - Innovation Management",
+      "item_index": 141,
+      "item_width": 106.00000000000007,
+      "item_height": 115.99999999999991,
+      "asset_path": "assets/extracted-icons/innovation-management.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "instance-pools",
+      "score": 1.0,
+      "title": "Compute - Instance Pools",
+      "item_index": 1,
+      "item_width": 84.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/instance-pools.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "integrations",
+      "score": 1.0,
+      "title": "Developer Services - Integrations",
+      "item_index": 81,
+      "item_width": 95.0,
+      "item_height": 101.00000000000007,
+      "asset_path": "assets/extracted-icons/integrations.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "internet-gateway",
+      "score": 1.0,
+      "title": "Networking - Internet Gateway",
+      "item_index": 32,
+      "item_width": 80.0,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/internet-gateway.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "inventory-management",
+      "score": 1.0,
+      "title": "Applications - Inventory Management",
+      "item_index": 143,
+      "item_width": 121.99999999999982,
+      "item_height": 115.99999999999991,
+      "asset_path": "assets/extracted-icons/inventory-management.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "ip-pools",
+      "score": 1.0,
+      "title": "Networking - IP Pools",
+      "item_index": 23,
+      "item_width": 84.00000000000027,
+      "item_height": 83.00000000000004,
+      "asset_path": "assets/extracted-icons/ip-pools.svg",
+      "stencil_count": 17
+    },
+    {
+      "icon_key": "jet",
+      "score": 1.0,
+      "title": "Developer Services - Jet",
+      "item_index": 88,
+      "item_width": 85.0,
+      "item_height": 108.99999999999994,
+      "asset_path": "assets/extracted-icons/jet.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "key-management",
+      "score": 1.0,
+      "title": "Identity and Security - Key Management",
+      "item_index": 111,
+      "item_width": 113.99999999999994,
+      "item_height": 125.00000000000033,
+      "asset_path": "assets/extracted-icons/key-management.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "key-vault",
+      "score": 1.0,
+      "title": "Identity and Security - Key Vault",
+      "item_index": 110,
+      "item_width": 84.00000000000027,
+      "item_height": 101.00000000000007,
+      "asset_path": "assets/extracted-icons/key-vault.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "license-manager",
+      "score": 1.0,
+      "title": "Governance and Administration - License Manager",
+      "item_index": 133,
+      "item_width": 77.00000000000013,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/license-manager.svg",
+      "stencil_count": 13
+    },
+    {
+      "icon_key": "load-balancer",
+      "score": 1.0,
+      "title": "Networking - Load Balancer",
+      "item_index": 18,
+      "item_width": 83.99999999999994,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/load-balancer.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "local-storage",
+      "score": 1.0,
+      "title": "Storage - Local Storage",
+      "item_index": 15,
+      "item_width": 70.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/local-storage.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "logging",
+      "score": 1.0,
+      "title": "Observability and Management - Logging",
+      "item_index": 117,
+      "item_width": 86.00000000000007,
+      "item_height": 108.00000000000004,
+      "asset_path": "assets/extracted-icons/logging.svg",
+      "stencil_count": 23
+    },
+    {
+      "icon_key": "logging-analytics",
+      "score": 1.0,
+      "title": "Observability and Management - Logging Analytics",
+      "item_index": 123,
+      "item_width": 85.0,
+      "item_height": 120.00000000000001,
+      "asset_path": "assets/extracted-icons/logging-analytics.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "machine-learning",
+      "score": 1.0,
+      "title": "Analytics and AI - Machine Learning",
+      "item_index": 67,
+      "item_width": 85.99999999999974,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/machine-learning.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "manufacturing",
+      "score": 1.0,
+      "title": "Applications - Manufacturing",
+      "item_index": 151,
+      "item_width": 125.00000000000001,
+      "item_height": 103.99999999999994,
+      "asset_path": "assets/extracted-icons/manufacturing.svg",
+      "stencil_count": 12
+    },
+    {
+      "icon_key": "marketplace",
+      "score": 1.0,
+      "title": "Marketplace",
+      "item_index": 136,
+      "item_width": 100.0,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/marketplace.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "maximum-security-zone",
+      "score": 1.0,
+      "title": "Identity and Security - Maximum Security Zone",
+      "item_index": 98,
+      "item_width": 117.99999999999987,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/maximum-security-zone.svg",
+      "stencil_count": 24
+    },
+    {
+      "icon_key": "media-flow",
+      "score": 1.0,
+      "title": "Media Flow",
+      "item_index": 159,
+      "item_width": 92.00000000000014,
+      "item_height": 108.00000000000004,
+      "asset_path": "assets/extracted-icons/media-flow.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "media-streams",
+      "score": 1.0,
+      "title": "Media Streams",
+      "item_index": 161,
+      "item_width": 83.99999999999994,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/media-streams.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "message-listener",
+      "score": 1.0,
+      "title": "Analytics and AI - Message Listener",
+      "item_index": 72,
+      "item_width": 84.00000000000027,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/message-listener.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "message-producer",
+      "score": 1.0,
+      "title": "Analytics and AI - Message Producer",
+      "item_index": 73,
+      "item_width": 97.00000000000014,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/message-producer.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "monitoring",
+      "score": 1.0,
+      "title": "Observability and Management - Monitoring",
+      "item_index": 120,
+      "item_width": 93.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/monitoring.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "mysql",
+      "score": 1.0,
+      "title": "Database - MySQL",
+      "item_index": 47,
+      "item_width": 101.00000000000007,
+      "item_height": 142.00000000000014,
+      "asset_path": "assets/extracted-icons/mysql.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "nat-gateway",
+      "score": 1.0,
+      "title": "Networking - NAT Gateway",
+      "item_index": 33,
+      "item_width": 72.99999999999987,
+      "item_height": 138.00000000000003,
+      "asset_path": "assets/extracted-icons/nat-gateway.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "network-firewall",
+      "score": 1.0,
+      "title": "Identity and Security - Firewall",
+      "item_index": 101,
+      "item_width": 83.99999999999994,
+      "item_height": 102.00000000000014,
+      "asset_path": "assets/extracted-icons/network-firewall.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "network-switch",
+      "score": 1.0,
+      "title": "Networking - Network Switch",
+      "item_index": 28,
+      "item_width": 83.99999999999994,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/network-switch.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "nosql",
+      "score": 1.0,
+      "title": "Database - NoSQL",
+      "item_index": 46,
+      "item_width": 83.99999999999994,
+      "item_height": 129.00000000000026,
+      "asset_path": "assets/extracted-icons/nosql.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "notifications",
+      "score": 1.0,
+      "title": "Developer Services - Notifications",
+      "item_index": 82,
+      "item_width": 102.99999999999987,
+      "item_height": 108.00000000000004,
+      "asset_path": "assets/extracted-icons/notifications.svg",
+      "stencil_count": 30
+    },
+    {
+      "icon_key": "nsg",
+      "score": 1.0,
+      "title": "Identity and Security - NSG",
+      "item_index": 114,
+      "item_width": 65.0,
+      "item_height": 109.00000000000027,
+      "asset_path": "assets/extracted-icons/nsg.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "object-storage",
+      "score": 1.0,
+      "title": "Storage - Object Storage",
+      "item_index": 11,
+      "item_width": 114.0,
+      "item_height": 109.0,
+      "asset_path": "assets/extracted-icons/object-storage.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "observability-and-management-events",
+      "score": 1.0,
+      "title": "Observability and Management -&amp;nbsp;Events",
+      "item_index": 124,
+      "item_width": 84.00000000000027,
+      "item_height": 107.00000000000014,
+      "asset_path": "assets/extracted-icons/observability-and-management-events.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "oco-subnet",
+      "score": 1.0,
+      "title": "Applications - OCO Subnet",
+      "item_index": 146,
+      "item_width": 95.0,
+      "item_height": 100.0,
+      "asset_path": "assets/extracted-icons/oco-subnet.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "opensearch",
+      "score": 1.0,
+      "title": "Database - OpenSearch",
+      "item_index": 49,
+      "item_width": 107.00000000000014,
+      "item_height": 109.00000000000027,
+      "asset_path": "assets/extracted-icons/opensearch.svg",
+      "stencil_count": 14
+    },
+    {
+      "icon_key": "operations-insights",
+      "score": 1.0,
+      "title": "Observability and Management - Operations Insights",
+      "item_index": 125,
+      "item_width": 90.99999999999974,
+      "item_height": 126.00000000000007,
+      "asset_path": "assets/extracted-icons/operations-insights.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "oracle-cloud-identifier",
+      "score": 1.0,
+      "title": "Governance and Administration - Oracle Cloud Identifier",
+      "item_index": 134,
+      "item_width": 103.99999999999994,
+      "item_height": 84.0000000000001,
+      "asset_path": "assets/extracted-icons/oracle-cloud-identifier.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "order-management",
+      "score": 1.0,
+      "title": "Applications - Order Management",
+      "item_index": 148,
+      "item_width": 113.99999999999994,
+      "item_height": 120.00000000000001,
+      "asset_path": "assets/extracted-icons/order-management.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "organization",
+      "score": 1.0,
+      "title": "Governance and Administration - Organization",
+      "item_index": 132,
+      "item_width": 102.00000000000014,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/organization.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "persistent-volume",
+      "score": 1.0,
+      "title": "Storage - Persistent Volume",
+      "item_index": 16,
+      "item_width": 90.0,
+      "item_height": 90.0,
+      "asset_path": "assets/extracted-icons/persistent-volume.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "policies",
+      "score": 1.0,
+      "title": "Identity and Security - Policies",
+      "item_index": 95,
+      "item_width": 84.00000000000027,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/policies.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "private-endpoint-ip",
+      "score": 1.0,
+      "title": "Developer Services - Private Endpoint IP",
+      "item_index": 78,
+      "item_width": 101.00000000000007,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/private-endpoint-ip.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "procurement",
+      "score": 1.0,
+      "title": "Applications - Procurement",
+      "item_index": 149,
+      "item_width": 110.0,
+      "item_height": 103.99999999999994,
+      "asset_path": "assets/extracted-icons/procurement.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "product-master-data-management",
+      "score": 1.0,
+      "title": "Applications - Product Master Data Management",
+      "item_index": 144,
+      "item_width": 117.99999999999987,
+      "item_height": 151.00000000000009,
+      "asset_path": "assets/extracted-icons/product-master-data-management.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "project-financial-management",
+      "score": 1.0,
+      "title": "Applications - Project Financial Management",
+      "item_index": 142,
+      "item_width": 138.99999999999994,
+      "item_height": 128.99999999999994,
+      "asset_path": "assets/extracted-icons/project-financial-management.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "project-management",
+      "score": 1.0,
+      "title": "Applications - Project Management",
+      "item_index": 152,
+      "item_width": 117.99999999999987,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/project-management.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "queuing",
+      "score": 1.0,
+      "title": "Observability and Management - Queuing",
+      "item_index": 127,
+      "item_width": 84.00000000000027,
+      "item_height": 108.00000000000004,
+      "asset_path": "assets/extracted-icons/queuing.svg",
+      "stencil_count": 15
+    },
+    {
+      "icon_key": "rac",
+      "score": 1.0,
+      "title": "Database - RAC",
+      "item_index": 48,
+      "item_width": 72.99999999999987,
+      "item_height": 109.00000000000027,
+      "asset_path": "assets/extracted-icons/rac.svg",
+      "stencil_count": 15
+    },
+    {
+      "icon_key": "remote-peering-gateway",
+      "score": 1.0,
+      "title": "Networking - Remote Peering Gateway",
+      "item_index": 34,
+      "item_width": 134.00000000000026,
+      "item_height": 98.0000000000002,
+      "asset_path": "assets/extracted-icons/remote-peering-gateway.svg",
+      "stencil_count": 5
+    },
+    {
+      "icon_key": "resource-manager",
+      "score": 1.0,
+      "title": "Developer Services - Resource Manager",
+      "item_index": 86,
+      "item_width": 84.00000000000027,
+      "item_height": 116.00000000000007,
+      "asset_path": "assets/extracted-icons/resource-manager.svg",
+      "stencil_count": 17
+    },
+    {
+      "icon_key": "route-table",
+      "score": 1.0,
+      "title": "Networking - Route Table",
+      "item_index": 29,
+      "item_width": 100.0,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/route-table.svg",
+      "stencil_count": 21
+    },
+    {
+      "icon_key": "roving-edge-infrastructure",
+      "score": 1.0,
+      "title": "Migration - Roving Edge Infrastructure",
+      "item_index": 129,
+      "item_width": 108.99999999999994,
+      "item_height": 122.00000000000014,
+      "asset_path": "assets/extracted-icons/roving-edge-infrastructure.svg",
+      "stencil_count": 8
+    },
+    {
+      "icon_key": "search",
+      "score": 1.0,
+      "title": "Observability and Management - Search",
+      "item_index": 118,
+      "item_width": 87.00000000000014,
+      "item_height": 104.0000000000001,
+      "asset_path": "assets/extracted-icons/search.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "security-list",
+      "score": 1.0,
+      "title": "Identity and Security - Security Lists",
+      "item_index": 108,
+      "item_width": 112.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/security-list.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "service-connector-hub",
+      "score": 1.0,
+      "title": "Analytics and AI - Service Connector Hub",
+      "item_index": 66,
+      "item_width": 117.99999999999987,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/service-connector-hub.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "service-gateway",
+      "score": 1.0,
+      "title": "Networking - Service Gateway",
+      "item_index": 31,
+      "item_width": 85.0,
+      "item_height": 124.0000000000001,
+      "asset_path": "assets/extracted-icons/service-gateway.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "service-mesh",
+      "score": 1.0,
+      "title": "Developer Services - Service Mesh",
+      "item_index": 76,
+      "item_width": 107.00000000000014,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/service-mesh.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "storage-service-gateway",
+      "score": 1.0,
+      "title": "Storage - Service Gateway",
+      "item_index": 13,
+      "item_width": 90.0,
+      "item_height": 114.0,
+      "asset_path": "assets/extracted-icons/storage-service-gateway.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "streaming",
+      "score": 1.0,
+      "title": "Analytics and AI - Streaming",
+      "item_index": 65,
+      "item_width": 83.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/streaming.svg",
+      "stencil_count": 28
+    },
+    {
+      "icon_key": "supply-chain-planning",
+      "score": 1.0,
+      "title": "Applications - Supply Chain Planning",
+      "item_index": 140,
+      "item_width": 105.0,
+      "item_height": 127.99999999999987,
+      "asset_path": "assets/extracted-icons/supply-chain-planning.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "tagging",
+      "score": 1.0,
+      "title": "Governance and Administration - Tagging",
+      "item_index": 135,
+      "item_width": 83.99999999999994,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/tagging.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "threat-defense",
+      "score": 1.0,
+      "title": "Identity and Security - Threat Defense",
+      "item_index": 113,
+      "item_width": 83.99999999999994,
+      "item_height": 121.00000000000007,
+      "asset_path": "assets/extracted-icons/threat-defense.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "threat-intelligence",
+      "score": 1.0,
+      "title": "Identity and Security - Threat Intelligence",
+      "item_index": 100,
+      "item_width": 101.00000000000007,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/threat-intelligence.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "user",
+      "score": 1.0,
+      "title": "Identity and Security - User",
+      "item_index": 89,
+      "item_width": 82.99999999999987,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/user.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "user-drawio-90",
+      "score": 1.0,
+      "title": "Identity and Security - User",
+      "item_index": 90,
+      "item_width": 66.00000000000007,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/user-drawio-90.svg",
+      "stencil_count": 6
+    },
+    {
+      "icon_key": "user-drawio-91",
+      "score": 1.0,
+      "title": "Identity and Security - User",
+      "item_index": 91,
+      "item_width": 76.00000000000007,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/user-drawio-91.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "user-group",
+      "score": 1.0,
+      "title": "Identity and Security - User Group",
+      "item_index": 92,
+      "item_width": 93.99999999999994,
+      "item_height": 86.00000000000007,
+      "asset_path": "assets/extracted-icons/user-group.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "user-group-drawio-93",
+      "score": 1.0,
+      "title": "Identity and Security - User Group",
+      "item_index": 93,
+      "item_width": 93.99999999999994,
+      "item_height": 70.0,
+      "asset_path": "assets/extracted-icons/user-group-drawio-93.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "user-group-drawio-94",
+      "score": 1.0,
+      "title": "Identity and Security - User Group",
+      "item_index": 94,
+      "item_width": 93.99999999999994,
+      "item_height": 69.0000000000001,
+      "asset_path": "assets/extracted-icons/user-group-drawio-94.svg",
+      "stencil_count": 9
+    },
+    {
+      "icon_key": "vault",
+      "score": 1.0,
+      "title": "Identity and Security - Vault",
+      "item_index": 105,
+      "item_width": 83.99999999999994,
+      "item_height": 105.00000000000017,
+      "asset_path": "assets/extracted-icons/vault.svg",
+      "stencil_count": 11
+    },
+    {
+      "icon_key": "vcn-flow-logs",
+      "score": 1.0,
+      "title": "Observability and Management - VCN Flow Logs",
+      "item_index": 126,
+      "item_width": 87.99999999999987,
+      "item_height": 129.0000000000001,
+      "asset_path": "assets/extracted-icons/vcn-flow-logs.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "virtual-cloud-network",
+      "score": 1.0,
+      "title": "Networking - Virtual Cloud Network VCN",
+      "item_index": 17,
+      "item_width": 100.0,
+      "item_height": 125.00000000000001,
+      "asset_path": "assets/extracted-icons/virtual-cloud-network.svg",
+      "stencil_count": 3
+    },
+    {
+      "icon_key": "visual-builder",
+      "score": 1.0,
+      "title": "Developer Services - Visual Builder",
+      "item_index": 84,
+      "item_width": 107.99999999999987,
+      "item_height": 104.0000000000001,
+      "asset_path": "assets/extracted-icons/visual-builder.svg",
+      "stencil_count": 10
+    },
+    {
+      "icon_key": "vtap",
+      "score": 1.0,
+      "title": "Networking - VTAP",
+      "item_index": 24,
+      "item_width": 84.00000000000027,
+      "item_height": 109.0000000000001,
+      "asset_path": "assets/extracted-icons/vtap.svg",
+      "stencil_count": 16
+    },
+    {
+      "icon_key": "vulnerability-scanning",
+      "score": 1.0,
+      "title": "Identity and Security - Vulnerability Scanning",
+      "item_index": 104,
+      "item_width": 102.99999999999987,
+      "item_height": 125.00000000000017,
+      "asset_path": "assets/extracted-icons/vulnerability-scanning.svg",
+      "stencil_count": 7
+    },
+    {
+      "icon_key": "waf",
+      "score": 1.0,
+      "title": "Identity and Security - WAF",
+      "item_index": 102,
+      "item_width": 87.00000000000014,
+      "item_height": 106.00000000000007,
+      "asset_path": "assets/extracted-icons/waf.svg",
+      "stencil_count": 4
+    },
+    {
+      "icon_key": "workflow",
+      "score": 1.0,
+      "title": "Observability and Management - Workflow",
+      "item_index": 128,
+      "item_width": 83.99999999999994,
+      "item_height": 109.00000000000027,
+      "asset_path": "assets/extracted-icons/workflow.svg",
+      "stencil_count": 3
+    }
+  ]
+}

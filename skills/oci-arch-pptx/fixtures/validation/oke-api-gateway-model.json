@@ -1,0 +1,74 @@
+{
+  "title": "Fixture - OKE with API Gateway",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "API Gateway is the public entry point and OKE runs in a private subnet."
+  ],
+  "architecture_notes": [
+    "Private OKE egress uses NAT Gateway."
+  ],
+  "vcn": {
+    "name": "OKE API VCN",
+    "cidr": "10.50.0.0/16",
+    "subnets": [
+      {
+        "name": "Public Edge Subnet",
+        "type": "public",
+        "tier": "edge",
+        "cidr": "10.50.0.0/24"
+      },
+      {
+        "name": "Private OKE Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.50.1.0/24"
+      }
+    ],
+    "gateways": [
+      {
+        "id": "igw-1",
+        "type": "internet-gateway",
+        "label": "Internet Gateway"
+      },
+      {
+        "id": "nat-1",
+        "type": "nat-gateway",
+        "label": "NAT Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "api-gw",
+      "type": "API Gateway",
+      "label": "API Gateway",
+      "count": 1
+    },
+    {
+      "id": "oke",
+      "type": "Container Engine for Kubernetes",
+      "label": "OKE Cluster",
+      "count": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "internet",
+      "to": "api-gw",
+      "label": "HTTPS 443"
+    },
+    {
+      "from": "api-gw",
+      "to": "oke",
+      "label": "Private API"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

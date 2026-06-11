@@ -1,0 +1,118 @@
+{
+  "required_keys": [
+    "load-balancer",
+    "bastion",
+    "compute",
+    "exadata-database-service",
+    "virtual-cloud-network",
+    "subnet",
+    "internet-gateway",
+    "nat-gateway",
+    "service-gateway"
+  ],
+  "fallbacks": {
+    "web-server": "compute",
+    "app-server": "compute",
+    "was": "compute",
+    "database": "database",
+    "exadata": "exadata-database-service",
+    "vcn": "virtual-cloud-network"
+  },
+  "preferred_source_slides": {
+    "exadata-database-service": [37],
+    "nat-gateway": [36],
+    "service-gateway": [36],
+    "internet-gateway": [36]
+  },
+  "aliases": {
+    "load-balancer": [
+      "load balancer",
+      "public load balancer",
+      "network load balancer",
+      "flexible load balancer",
+      "lb"
+    ],
+    "bastion": [
+      "bastion",
+      "bastion service",
+      "jump host",
+      "jump server"
+    ],
+    "compute": [
+      "compute",
+      "compute instance",
+      "virtual machine",
+      "vm",
+      "web server",
+      "application server",
+      "was"
+    ],
+    "database": [
+      "database",
+      "db system",
+      "oracle database",
+      "base database service"
+    ],
+    "exadata-database-service": [
+      "exadata",
+      "exadata database service",
+      "exadata database service on dedicated infrastructure",
+      "exadata cloud infrastructure",
+      "exadi",
+      "exadb-d",
+      "exacs"
+    ],
+    "virtual-cloud-network": [
+      "virtual cloud network",
+      "vcn",
+      "cloud network"
+    ],
+    "subnet": [
+      "subnet",
+      "public subnet",
+      "private subnet"
+    ],
+    "internet-gateway": [
+      "internet gateway",
+      "igw"
+    ],
+    "iam": [
+      "iam",
+      "identity and access management",
+      "identity access management"
+    ],
+    "nat-gateway": [
+      "nat gateway",
+      "nat"
+    ],
+    "service-gateway": [
+      "service gateway",
+      "sgw"
+    ],
+    "dynamic-routing-gateway": [
+      "dynamic routing gateway",
+      "drg"
+    ],
+    "object-storage": [
+      "object storage",
+      "bucket"
+    ],
+    "audit": [
+      "audit",
+      "auditing",
+      "audit logs"
+    ],
+    "route-table": [
+      "route table",
+      "routing table"
+    ],
+    "security-list": [
+      "security list",
+      "security lists"
+    ],
+    "network-firewall": [
+      "network firewall",
+      "firewall"
+    ]
+  }
+}

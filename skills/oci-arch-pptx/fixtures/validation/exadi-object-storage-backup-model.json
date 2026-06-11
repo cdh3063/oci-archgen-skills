@@ -1,0 +1,63 @@
+{
+  "title": "Fixture - ExaDI Object Storage Backup",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "ExaDI is private and backs up to Object Storage through Service Gateway."
+  ],
+  "architecture_notes": [
+    "Object Storage is represented in Oracle Service Network."
+  ],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "object-storage",
+        "type": "Object Storage",
+        "label": "Object Storage"
+      }
+    ]
+  },
+  "vcn": {
+    "name": "ExaDI Backup VCN",
+    "cidr": "10.60.0.0/16",
+    "subnets": [
+      {
+        "name": "Private DB Subnet",
+        "type": "private",
+        "tier": "data",
+        "cidr": "10.60.1.0/24"
+      }
+    ],
+    "gateways": [
+      {
+        "id": "sgw-1",
+        "type": "service-gateway",
+        "label": "Service Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "exadi",
+      "type": "Exadata",
+      "label": "ExaDI",
+      "count": 1,
+      "icon_key": "exadata-database-service"
+    }
+  ],
+  "flows": [
+    {
+      "from": "exadi",
+      "to": "object-storage",
+      "label": "Backup"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

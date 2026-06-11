@@ -1,0 +1,106 @@
+{
+  "title": "Validation Fixture OCI Architecture",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [],
+  "architecture_notes": [],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "object-storage",
+        "type": "Object Storage",
+        "label": "Object Storage"
+      }
+    ]
+  },
+  "vcn": {
+    "name": "Validation VCN",
+    "cidr": "10.0.0.0/16",
+    "subnets": [
+      {
+        "name": "Public Subnet",
+        "type": "public",
+        "tier": "dmz",
+        "cidr": "10.0.1.0/24",
+        "resources": ["lb-1", "bastion-1"]
+      },
+      {
+        "name": "App Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.0.2.0/24",
+        "resources": ["web-1"]
+      },
+      {
+        "name": "DB Subnet",
+        "type": "private",
+        "tier": "db",
+        "cidr": "10.0.3.0/24",
+        "resources": ["db-1"]
+      }
+    ],
+    "gateways": [
+      {
+        "id": "igw-1",
+        "type": "internet-gateway",
+        "label": "Internet Gateway"
+      },
+      {
+        "id": "sgw-1",
+        "type": "service-gateway",
+        "label": "Service Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "lb-1",
+      "type": "load-balancer",
+      "label": "Load Balancer",
+      "subnet": "Public Subnet",
+      "count": 1,
+      "ha_group": null,
+      "icon_key": "load-balancer",
+      "notes": []
+    },
+    {
+      "id": "bastion-1",
+      "type": "bastion",
+      "label": "Bastion",
+      "subnet": "Public Subnet",
+      "count": 1,
+      "ha_group": null,
+      "icon_key": "bastion",
+      "notes": []
+    },
+    {
+      "id": "web-1",
+      "type": "web-server",
+      "label": "Web Server",
+      "subnet": "App Subnet",
+      "count": 1,
+      "ha_group": null,
+      "icon_key": "compute",
+      "notes": []
+    },
+    {
+      "id": "db-1",
+      "type": "database",
+      "label": "Database",
+      "subnet": "DB Subnet",
+      "count": 1,
+      "ha_group": null,
+      "icon_key": "database",
+      "notes": []
+    }
+  ],
+  "flows": [],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "title": "Fixture - DRG with On-Prem",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "On-Prem Data Center connects to OCI through DRG."
+  ],
+  "architecture_notes": [
+    "FastConnect is rendered as a network connection line."
+  ],
+  "external_networks": [
+    {
+      "id": "on-prem",
+      "type": "customer-data-center",
+      "label": "On-Prem Data Center",
+      "icon_key": "customer-data-center"
+    }
+  ],
+  "vcn": {
+    "name": "Hybrid DRG VCN",
+    "cidr": "10.70.0.0/16",
+    "subnets": [
+      {
+        "name": "Private App Subnet",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.70.1.0/24"
+      },
+      {
+        "name": "Management Subnet",
+        "type": "private",
+        "tier": "management",
+        "cidr": "10.70.2.0/24"
+      }
+    ],
+    "gateways": [
+      {
+        "id": "drg-1",
+        "type": "drg",
+        "label": "Dynamic Routing Gateway"
+      },
+      {
+        "id": "nat-1",
+        "type": "nat-gateway",
+        "label": "NAT Gateway"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "app",
+      "type": "Compute",
+      "label": "Application Server",
+      "count": 1
+    },
+    {
+      "id": "bastion",
+      "type": "Bastion",
+      "label": "Bastion",
+      "subnet": "Management Subnet",
+      "count": 1
+    }
+  ],
+  "connections": [
+    {
+      "id": "fc-1",
+      "type": "fastconnect",
+      "from": "on-prem",
+      "to": "drg-1",
+      "label": "FastConnect",
+      "arrow": false
+    }
+  ],
+  "flows": [
+    {
+      "from": "on-prem",
+      "to": "app",
+      "label": "Private TCP"
+    },
+    {
+      "from": "bastion",
+      "to": "app",
+      "label": "Admin SSH"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": []
+  }
+}

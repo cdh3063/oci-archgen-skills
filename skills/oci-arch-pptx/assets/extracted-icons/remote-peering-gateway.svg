@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="-3.3600 -16.3600 90.7200 90.7200" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Networking - Remote Peering Gateway">
+  <path d="M 50 4.17 C 24.69 4.17 4.17 24.69 4.17 50 C 4.17 75.31 24.69 95.83 50 95.83 C 75.31 95.83 95.83 75.31 95.83 50 C 95.83 24.69 75.31 4.17 50 4.17 L 50 4.17 M 0 50 C 0 22.39 22.39 0 50 0 C 77.62 0 100 22.39 100 50 C 100 77.61 77.62 100 50 100 C 22.39 100 0 77.61 0 50 L 0 50" fill="#2c5967" stroke="none" fill-rule="evenodd" clip-rule="evenodd" transform="translate(13.0000 0.0000) scale(0.580000 0.580000)"/>
+  <path d="M 0 0 L 100 0 L 100 100 L 0 100 L 0 0 L 0 0" fill="#FFFFFF" stroke="none" fill-rule="evenodd" clip-rule="evenodd" transform="translate(0.0000 25.0000) scale(0.840000 0.060000)"/>
+  <path d="M 0 0 L 100 0 L 100 100 L 0 100 L 0 0 L 0 0" fill="#2c5967" stroke="none" fill-rule="evenodd" clip-rule="evenodd" transform="translate(5.0000 28.0000) scale(0.750000 0.020000)"/>
+  <path d="M 20.58 0 L 100 50 L 20.58 100 L 0 87.04 L 58.83 50 L 0 12.96 L 20.58 0 L 20.58 0" fill="#2c5967" stroke="none" fill-rule="evenodd" clip-rule="evenodd" transform="translate(74.0000 22.0000) scale(0.080000 0.130000)"/>
+  <path d="M 79.42 0 L 100 12.96 L 41.16 50 L 100 87.04 L 79.42 100 L 0 50 L 79.42 0 L 79.42 0" fill="#2c5967" stroke="none" fill-rule="evenodd" clip-rule="evenodd" transform="translate(2.0000 22.0000) scale(0.080000 0.130000)"/>
+</svg>
