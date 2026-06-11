@@ -88,6 +88,13 @@
         margin-top: 14px;
       }
 
+      .guide {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 18px;
+        margin: 24px 0;
+      }
+
       .meta {
         color: var(--muted);
         font-size: 0.92rem;
@@ -107,6 +114,14 @@
         font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.93em;
       }
+
+      pre {
+        overflow-x: auto;
+        margin: 12px 0 0;
+        padding: 12px;
+        background: #f5f5f4;
+        border: 1px solid var(--line);
+      }
     </style>
   </head>
   <body>
@@ -120,6 +135,32 @@
         </div>
       </header>
 
+      <section class="guide" aria-label="Update installed skills after a patch">
+        <h2>Update Installed Skills After a Patch</h2>
+        <p>After pulling a repository patch, reinstall the skill into the Codex skill directory used by your runtime.</p>
+        <pre><code>cd ~/oci-archgen-skills
+git pull --ff-only origin main
+./install.sh oci-arch-pptx --tool codex</code></pre>
+        <ul>
+          <li>Use <code>./install.sh --all --tool codex</code> to refresh every skill in the repo.</li>
+          <li>Use <code>--tool codex-local</code> from a target project directory to install into that project's <code>.codex/skills</code>.</li>
+          <li>Use <code>--tool codex-repo</code> to install into a project's <code>.agents/skills</code>.</li>
+          <li>Restart or reload the Codex session when you need the updated <code>SKILL.md</code> instructions to be re-discovered.</li>
+        </ul>
+        <pre><code>python3 ~/.codex/skills/oci-arch-pptx/scripts/validate_pptx.py --help
+python3 ~/.codex/skills/oci-arch-pptx/scripts/generate_pptx.py --help</code></pre>
+      </section>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>current push</code></div>
+        <h2>Installed skill update guide</h2>
+        <ul>
+          <li>Added the installed skill update procedure for patches pulled from the repository.</li>
+          <li>Documented Codex global, Codex local, and repo-local install targets.</li>
+          <li>Kept the page-level rule that patch notes should be updated before each push to <code>main</code>.</li>
+        </ul>
+      </article>
+
       <article class="note">
         <div class="meta">2026-06-11 · main push · <code>2631f1f</code></div>
         <h2>Gateway boundary alignment</h2>
@@ -127,7 +168,15 @@
           <li>Centered Internet Gateway and NAT Gateway icons on the owning VCN boundary line.</li>
           <li>Regenerated and visually verified the same-region LPG 3-tier DR PPTX output.</li>
           <li>Validation passed: package/layout, model-aware text coverage, and model-aware layout checks.</li>
+        </ul>
+      </article>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>8778468</code></div>
+        <h2>GitHub Pages patch notes</h2>
+        <ul>
           <li>Added this GitHub Pages patch notes page and linked it from the overview page.</li>
+          <li>Started tracking push-level changes for skill and documentation updates.</li>
         </ul>
       </article>
 
