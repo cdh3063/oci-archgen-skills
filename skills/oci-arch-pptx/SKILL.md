@@ -15,6 +15,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Preserve explicit user choices.
    - Mark assumptions instead of silently inventing requirements.
    - Read `references/diagram-model.md` when creating or validating the model.
+   - Read `references/consistency-guidelines.md` before creating or reviewing any model that uses multiple regions, multiple VCNs, DR, custom renderer paths, or nonstandard container names.
 
 2. Apply OCI architecture guidance.
    - Read `references/oci-best-practices.md` before finalizing topology choices.
@@ -58,6 +59,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - With `--model`, the validator additionally checks expected resource-to-subnet containment, OSN presence only when modeled, and public/private subnet gateway combinations.
    - Check that the PPTX package is valid, has PowerPoint presentation parts, and contains at least one slide.
    - Render/preview the deck when the presentation runtime is available and inspect slide layout for overlap, missing resources, and readability.
+   - Treat layout-skip warnings, validator blind spots, and unsupported custom renderer patterns as failed delivery gates unless the validator is updated in the same change.
    - Review best-practice deviations and report them as notes, not hidden changes.
 
 ## Diagram Layout Rules
@@ -154,6 +156,7 @@ When finishing a diagram task, provide:
 - `assets/OCI_Icons.pptx`: local OCI Architecture Diagram Toolkit PowerPoint source.
 - `references/oci-best-practices.md`: Oracle best-practice checklist and source URLs.
 - `references/diagram-model.md`: intermediate JSON model contract.
+- `references/consistency-guidelines.md`: consistency rules for keeping the model, renderer, validator, and final deck aligned.
 - `references/icon-source.md`: icon source and common icon mapping policy.
 - `references/icon-aliases.json`: required icon keys, aliases, and fallback keys for extraction.
 - `references/icon-map.json`: generated icon mapping from the bundled PPTX.
