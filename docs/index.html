@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OCI ArchGen Skills</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #d6d3d1;
+        --accent: #c74634;
+        --bg: #fafafa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      header {
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3.25rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 8px 13px;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: #fff;
+        text-decoration: none;
+        font-weight: 650;
+        font-size: 0.95rem;
+      }
+
+      .button.primary {
+        border-color: var(--accent);
+        background: var(--accent);
+        color: #fff;
+      }
+
+      .preview {
+        margin-top: 24px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .preview img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .caption {
+        padding: 12px 14px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+
+      .details {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .detail {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 14px;
+      }
+
+      .detail strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.93em;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          width: min(100% - 20px, 1180px);
+          padding-top: 24px;
+        }
+
+        .details {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>OCI ArchGen Skills</h1>
+        <p>Codex skills for generating editable Oracle Cloud Infrastructure architecture PowerPoint diagrams.</p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/cdh3063/oci-archgen-skills">View Repository</a>
+          <a class="button" href="https://github.com/cdh3063/oci-archgen-skills/raw/main/examples/ha-waf-dataguard.pptx">Download Example PPTX</a>
+          <a class="button" href="https://github.com/cdh3063/oci-archgen-skills/blob/main/examples/ha-waf-dataguard-model.json">View Example Model</a>
+        </div>
+      </header>
+
+      <section class="preview" aria-label="Generated OCI architecture PPTX preview">
+        <img src="assets/ha-waf-dataguard.png" alt="Generated OCI HA architecture diagram preview with WAF, public and private LoadBalancers, redundant Web and App servers, Object Storage, and DataGuard.">
+        <div class="caption">
+          Example output rendered from <code>examples/ha-waf-dataguard.pptx</code>. The PowerPoint deck remains editable.
+        </div>
+      </section>
+
+      <section class="details" aria-label="Project highlights">
+        <div class="detail">
+          <strong>Editable PPTX</strong>
+          <p>Generates deterministic Office Open XML decks with editable containers, labels, notes, and connector objects.</p>
+        </div>
+        <div class="detail">
+          <strong>OCI Layout Rules</strong>
+          <p>Applies Region, VCN, subnet, gateway, OSN, LoadBalancer, and DataGuard placement conventions.</p>
+        </div>
+        <div class="detail">
+          <strong>Validation</strong>
+          <p>Includes package, model coverage, containment, icon sizing, and layout checks for generated diagrams.</p>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

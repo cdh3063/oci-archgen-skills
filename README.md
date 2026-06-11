@@ -2,6 +2,8 @@
 
 Skills for generating editable Oracle Cloud Infrastructure (OCI) architecture PowerPoint decks with Codex.
 
+GitHub Pages preview: https://cdh3063.github.io/oci-archgen-skills/
+
 ## Included Skills
 
 ### `oci-arch-pptx`
