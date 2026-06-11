@@ -18,6 +18,12 @@ Key capabilities:
 
 ## Install
 
+Prerequisites:
+
+- Git
+- Bash
+- Python 3.9 or later
+
 Install all skills globally for Codex:
 
 ```bash
@@ -74,6 +80,21 @@ This repository includes OCI icon assets used by the `oci-arch-pptx` skill, incl
 Oracle Cloud Infrastructure icons, marks, and related brand assets remain the property of Oracle and are subject to Oracle's applicable brand and usage guidelines. This project is not affiliated with or endorsed by Oracle.
 
 ## Development
+
+Install development dependencies:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
+```
+
+Normal PPTX generation and model validation use only the Python standard library. The development dependency is used for Codex skill metadata validation.
+
+Validate the skill metadata when the Codex `skill-creator` validator is available:
+
+```bash
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py \
+  skills/oci-arch-pptx
+```
 
 Run the renderer and validator against the included example:
 
