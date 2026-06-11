@@ -2042,14 +2042,16 @@ class Renderer:
                 )
                 right_ys.append(y)
             else:
-                x = vcn_box.x - 0.78
+                place_right = peering_side == "left" and key in {"internet-gateway", "nat-gateway"}
+                x = vcn_box.right + 0.14 if place_right else vcn_box.x - 0.78
+                occupied = right_ys if place_right else left_ys
                 y = self._avoid_gateway_overlap(
                     self._gateway_y(key, gateway_type, subnet_boxes, vcn_box),
-                    left_ys,
+                    occupied,
                     region_box.y + 0.72,
                     region_box.bottom - 0.92,
                 )
-                left_ys.append(y)
+                occupied.append(y)
             icon_box = Box(x, y, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
             label_width = 0.62 if key == "service-gateway" else 1.05
             self._draw_icon(
