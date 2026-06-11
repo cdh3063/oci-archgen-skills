@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OCI ArchGen Skills Patch Notes</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #111827;
+        --muted: #4b5563;
+        --line: #d6d3d1;
+        --accent: #c74634;
+        --bg: #fafafa;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.55;
+      }
+
+      main {
+        width: min(960px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 40px 0 56px;
+      }
+
+      header {
+        margin-bottom: 24px;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      h2 {
+        margin: 0 0 8px;
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 1rem;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 40px;
+        padding: 8px 13px;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: #fff;
+        text-decoration: none;
+        font-weight: 650;
+        font-size: 0.95rem;
+      }
+
+      .note {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 18px;
+        margin-top: 14px;
+      }
+
+      .meta {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-bottom: 8px;
+      }
+
+      ul {
+        margin: 10px 0 0;
+        padding-left: 20px;
+      }
+
+      li {
+        margin: 5px 0;
+      }
+
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.93em;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Patch Notes</h1>
+        <p>Push-level changes for the OCI ArchGen Skills GitHub Pages site. Update this page before every push to <code>main</code>.</p>
+        <div class="actions">
+          <a class="button" href="index.html">Back to Overview</a>
+          <a class="button" href="https://github.com/cdh3063/oci-archgen-skills">View Repository</a>
+        </div>
+      </header>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>2631f1f</code></div>
+        <h2>Gateway boundary alignment</h2>
+        <ul>
+          <li>Centered Internet Gateway and NAT Gateway icons on the owning VCN boundary line.</li>
+          <li>Regenerated and visually verified the same-region LPG 3-tier DR PPTX output.</li>
+          <li>Validation passed: package/layout, model-aware text coverage, and model-aware layout checks.</li>
+          <li>Added this GitHub Pages patch notes page and linked it from the overview page.</li>
+        </ul>
+      </article>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>9765564</code></div>
+        <h2>Secondary VCN edge gateway placement</h2>
+        <ul>
+          <li>Moved VCN2 Internet Gateway and NAT Gateway to the VCN2 outer edge to avoid overlap with VCN1.</li>
+          <li>Rebuilt the local peering 3-tier DR PPTX and verified rendered previews.</li>
+        </ul>
+      </article>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>2aa8467</code></div>
+        <h2>Same-region LPG multi-VCN OSN diagrams</h2>
+        <ul>
+          <li>Added renderer support for two same-region VCNs with a shared Oracle Service Network container.</li>
+          <li>Added a validation fixture for same-region LPG, primary/standby database, and single-OSN diagrams.</li>
+          <li>Ran the full fixture validation loop successfully.</li>
+        </ul>
+      </article>
+
+      <article class="note">
+        <div class="meta">2026-06-11 · main push · <code>eee36c4</code></div>
+        <h2>Consistency guidelines</h2>
+        <ul>
+          <li>Added model, renderer, validator, connector, naming, and validation consistency guidance.</li>
+          <li>Linked the new guidance from the OCI architecture PPTX skill instructions.</li>
+        </ul>
+      </article>
+    </main>
+  </body>
+</html>
