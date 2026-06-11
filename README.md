@@ -4,6 +4,8 @@ Skills for generating editable Oracle Cloud Infrastructure (OCI) architecture Po
 
 GitHub Pages preview: https://cdh3063.github.io/oci-archgen-skills/
 
+Patch notes: https://cdh3063.github.io/oci-archgen-skills/patch-notes.html
+
 ![Generated OCI DR architecture PPTX preview](docs/assets/dr-remote-peering-3tier-dg.png)
 
 ## Included Skills
@@ -50,6 +52,22 @@ Other install targets:
 ./install.sh oci-arch-pptx --tool codex-repo    # .agents/skills/<skill>
 ./install.sh oci-arch-pptx --tool claude        # ~/.claude/skills/<skill>
 ```
+
+## Update Installed Skills
+
+After pulling a repository patch, reinstall the skill into the Codex skill directory used by your runtime:
+
+```bash
+cd ~/oci-archgen-skills
+git pull --ff-only origin main
+./install.sh oci-arch-pptx --tool codex
+```
+
+Use `./install.sh --all --tool codex` to refresh every skill in the repo.
+
+Use `--tool codex-local` from a target project directory to install into that project's `.codex/skills`, or `--tool codex-repo` to install into `.agents/skills`.
+
+Restart or reload the Codex session when updated `SKILL.md` instructions need to be re-discovered.
 
 ## Usage
 
