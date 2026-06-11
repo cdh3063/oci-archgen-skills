@@ -1053,8 +1053,22 @@ class Renderer:
             bold=True,
         )
 
+        osn_services = self._oracle_service_network_services(model)
+        shared_osn_box = None
+
         if same_region:
-            region_box = Box(0.75, 0.74, 11.95, 6.0)
+            if osn_services:
+                region_box = Box(0.55, 0.72, 12.25, 6.02)
+                vcn_boxes = [
+                    Box(1.03, 1.23, 4.49, 5.02),
+                    Box(5.92, 1.23, 4.49, 5.02),
+                ]
+            else:
+                region_box = Box(0.75, 0.74, 11.95, 6.0)
+                vcn_boxes = [
+                    Box(1.50, 1.22, 4.45, 5.05),
+                    Box(7.55, 1.22, 4.45, 5.05),
+                ]
             self._draw_container(
                 slide,
                 "region",
@@ -1067,9 +1081,16 @@ class Renderer:
                 align="ctr",
             )
             layouts = [
-                (vcns[0], region_box, Box(1.50, 1.22, 4.45, 5.05), "right"),
-                (vcns[1], region_box, Box(7.55, 1.22, 4.45, 5.05), "left"),
+                (vcns[0], region_box, vcn_boxes[0], "right"),
+                (vcns[1], region_box, vcn_boxes[1], "left"),
             ]
+            if osn_services:
+                shared_osn_box = self._draw_oracle_service_network(
+                    slide,
+                    region_box,
+                    vcn_boxes[-1],
+                    osn_services,
+                )
         else:
             region_boxes = [
                 Box(0.75, 0.74, 5.75, 6.0),
@@ -1119,7 +1140,7 @@ class Renderer:
             vcn_model = dict(model)
             vcn_model["vcn"] = vcn
             vcn_model["resources"] = self._resources_for_vcn(model, vcn)
-            osn_box = None
+            osn_box = shared_osn_box
             subnet_boxes = self._draw_subnets(slide, vcn_model, vcn_box, start_index=subnet_index)
             subnet_index += len(self._ordered_subnets(vcn_model))
             all_subnet_boxes.update(subnet_boxes)
@@ -1192,6 +1213,8 @@ class Renderer:
         return label
 
     def _resources_for_vcn(self, model: dict[str, Any], vcn: dict[str, Any]) -> list[dict[str, Any]]:
+        vcn_id = str(vcn.get("id") or normalize_lookup(vcn.get("name")) or "")
+        vcn_name = str(vcn.get("name") or "")
         subnet_names = {
             str(subnet.get("name") or "")
             for subnet in vcn.get("subnets") or []
@@ -1208,8 +1231,9 @@ class Renderer:
             if not isinstance(resource, dict):
                 continue
             rid = str(resource.get("id") or "")
+            resource_vcn = str(resource.get("vcn") or resource.get("vcn_id") or "")
             subnet = str(resource.get("subnet") or "")
-            if rid in resource_ids or subnet in subnet_names:
+            if resource_vcn in {vcn_id, vcn_name} or rid in resource_ids or subnet in subnet_names:
                 resources.append(resource)
         return resources
 
@@ -1235,6 +1259,8 @@ class Renderer:
         self.boxes["internet"] = user_box
         self.boxes["users"] = user_box
         self.boxes["external"] = user_box
+        self.boxes["internet-users"] = user_box
+        self.boxes["internet users"] = user_box
 
     def _add_notes_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "F8FAFC", None)
@@ -1290,12 +1316,12 @@ class Renderer:
             size_pt=10,
             color="374151",
         )
-        slide.add_shape("Rendering box", Box(0.65, 4.72, 12.0, 1.55), "FFFFFF", "CBD5E1", 1.0)
+        slide.add_shape("Rendering box", Box(0.65, 4.56, 12.0, 1.95), "FFFFFF", "CBD5E1", 1.0)
         slide.add_text(
             "Rendering notes",
-            Box(0.85, 4.9, 11.55, 1.14),
+            Box(0.85, 4.75, 11.55, 1.56),
             self._section_text("Rendering notes", render_items),
-            size_pt=9.2,
+            size_pt=8.3,
             color="374151",
         )
 
@@ -1985,14 +2011,21 @@ class Renderer:
             key = self._canonical_icon_key(mapped_key) or mapped_key
             short_label = self._gateway_short_label(key, gateway_type, gateway)
             if key == "service-gateway" and osn_box is not None:
-                x = osn_box.x - STANDARD_ICON_SIZE
+                if peering_side == "right":
+                    x = vcn_box.x + 0.10
+                    preferred_y = self._gateway_y(key, gateway_type, subnet_boxes, vcn_box)
+                    occupied = left_ys
+                else:
+                    x = osn_box.x - STANDARD_ICON_SIZE
+                    preferred_y = self._gateway_y(key, gateway_type, subnet_boxes, vcn_box)
+                    occupied = right_ys
                 y = self._avoid_gateway_overlap(
-                    self._gateway_y(key, gateway_type, subnet_boxes, vcn_box),
-                    right_ys,
+                    preferred_y,
+                    occupied,
                     region_box.y + 0.72,
                     region_box.bottom - 0.92,
                 )
-                right_ys.append(y)
+                occupied.append(y)
             elif gateway_type in {"local-peering-gateway", "lpg", "remote-peering-gateway", "remote-peering-connection", "rpg"}:
                 side = peering_side or str(gateway.get("side") or "left").lower()
                 x = vcn_box.right + 0.24 if side == "right" else vcn_box.x - 0.72
@@ -2866,9 +2899,12 @@ class Renderer:
         if key == "service-gateway":
             box = self._first_matching_box(lower, ["data", "db", "database"])
             return (box.cy if box else vcn_box.cy) - 0.21
+        if gateway_type in {"local-peering-gateway", "lpg"}:
+            private_boxes = self._private_tier_boxes(subnet_boxes)
+            if private_boxes:
+                return private_boxes[0].cy - STANDARD_ICON_SIZE / 2
+            return vcn_box.cy - 0.21
         if gateway_type in {
-            "local-peering-gateway",
-            "lpg",
             "remote-peering-gateway",
             "remote-peering-connection",
             "rpg",

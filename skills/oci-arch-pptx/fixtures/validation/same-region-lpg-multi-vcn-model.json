@@ -1,0 +1,307 @@
+{
+  "title": "Fixture - Same Region LPG Multi-VCN DR",
+  "language": "en",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "VCN1 is active/primary and VCN2 is standby in the same OCI region.",
+    "The two VCNs use Local Peering Gateways for private same-region connectivity.",
+    "Oracle Service Network is shown once for the region."
+  ],
+  "architecture_notes": [
+    "Three-tier traffic is Public Load Balancer to Web to Internal Load Balancer to App to DB.",
+    "Primary database replication to standby database is represented as Data Guard."
+  ],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "object-storage",
+        "type": "object-storage",
+        "label": "Object Storage",
+        "icon_key": "object-storage"
+      }
+    ]
+  },
+  "vcns": [
+    {
+      "id": "vcn1",
+      "name": "VCN1 Primary",
+      "cidr": "10.0.0.0/16",
+      "subnets": [
+        {
+          "id": "vcn1-public",
+          "name": "VCN1 Public Edge",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.0.0.0/24",
+          "resources": ["vcn1-public-lb", "vcn1-bastion"]
+        },
+        {
+          "id": "vcn1-app",
+          "name": "VCN1 Private App",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.0.1.0/24",
+          "resources": ["vcn1-web", "vcn1-internal-lb", "vcn1-app"]
+        },
+        {
+          "id": "vcn1-db",
+          "name": "VCN1 Private DB",
+          "type": "private",
+          "tier": "db",
+          "cidr": "10.0.2.0/24",
+          "resources": ["vcn1-db-primary"]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "vcn1-igw",
+          "type": "internet-gateway",
+          "label": "VCN1 Internet Gateway",
+          "short_label": "IGW"
+        },
+        {
+          "id": "vcn1-nat",
+          "type": "nat-gateway",
+          "label": "VCN1 NAT Gateway",
+          "short_label": "NAT"
+        },
+        {
+          "id": "vcn1-sgw",
+          "type": "service-gateway",
+          "label": "VCN1 Service Gateway",
+          "short_label": "SGW"
+        },
+        {
+          "id": "vcn1-lpg",
+          "type": "local-peering-gateway",
+          "label": "VCN1 Local Peering Gateway",
+          "short_label": "LPG"
+        }
+      ]
+    },
+    {
+      "id": "vcn2",
+      "name": "VCN2 Standby",
+      "cidr": "10.1.0.0/16",
+      "subnets": [
+        {
+          "id": "vcn2-public",
+          "name": "VCN2 Public Edge",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.1.0.0/24",
+          "resources": ["vcn2-public-lb", "vcn2-bastion"]
+        },
+        {
+          "id": "vcn2-app",
+          "name": "VCN2 Private App",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.1.1.0/24",
+          "resources": ["vcn2-web", "vcn2-internal-lb", "vcn2-app"]
+        },
+        {
+          "id": "vcn2-db",
+          "name": "VCN2 Private DB",
+          "type": "private",
+          "tier": "db",
+          "cidr": "10.1.2.0/24",
+          "resources": ["vcn2-db-standby"]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "vcn2-igw",
+          "type": "internet-gateway",
+          "label": "VCN2 Internet Gateway",
+          "short_label": "IGW"
+        },
+        {
+          "id": "vcn2-nat",
+          "type": "nat-gateway",
+          "label": "VCN2 NAT Gateway",
+          "short_label": "NAT"
+        },
+        {
+          "id": "vcn2-sgw",
+          "type": "service-gateway",
+          "label": "VCN2 Service Gateway",
+          "short_label": "SGW"
+        },
+        {
+          "id": "vcn2-lpg",
+          "type": "local-peering-gateway",
+          "label": "VCN2 Local Peering Gateway",
+          "short_label": "LPG"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "vcn1-public-lb",
+      "vcn": "vcn1",
+      "type": "load-balancer",
+      "label": "VCN1 Public LB",
+      "subnet": "VCN1 Public Edge",
+      "placement": "edge",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "vcn1-bastion",
+      "vcn": "vcn1",
+      "type": "bastion",
+      "label": "VCN1 Bastion",
+      "subnet": "VCN1 Public Edge",
+      "placement": "edge",
+      "icon_key": "bastion"
+    },
+    {
+      "id": "vcn1-web",
+      "vcn": "vcn1",
+      "type": "web-server",
+      "label": "VCN1 Web x2",
+      "subnet": "VCN1 Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "vcn1-internal-lb",
+      "vcn": "vcn1",
+      "type": "load-balancer",
+      "label": "VCN1 Internal LB",
+      "subnet": "VCN1 Private App",
+      "placement": "app",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "vcn1-app",
+      "vcn": "vcn1",
+      "type": "app-server",
+      "label": "VCN1 App x2",
+      "subnet": "VCN1 Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "vcn1-db-primary",
+      "vcn": "vcn1",
+      "type": "database",
+      "label": "VCN1 DB Primary",
+      "subnet": "VCN1 Private DB",
+      "placement": "data",
+      "icon_key": "database"
+    },
+    {
+      "id": "vcn2-public-lb",
+      "vcn": "vcn2",
+      "type": "load-balancer",
+      "label": "VCN2 Public LB",
+      "subnet": "VCN2 Public Edge",
+      "placement": "edge",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "vcn2-bastion",
+      "vcn": "vcn2",
+      "type": "bastion",
+      "label": "VCN2 Bastion",
+      "subnet": "VCN2 Public Edge",
+      "placement": "edge",
+      "icon_key": "bastion"
+    },
+    {
+      "id": "vcn2-web",
+      "vcn": "vcn2",
+      "type": "web-server",
+      "label": "VCN2 Web x2",
+      "subnet": "VCN2 Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "vcn2-internal-lb",
+      "vcn": "vcn2",
+      "type": "load-balancer",
+      "label": "VCN2 Internal LB",
+      "subnet": "VCN2 Private App",
+      "placement": "app",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "vcn2-app",
+      "vcn": "vcn2",
+      "type": "app-server",
+      "label": "VCN2 App x2",
+      "subnet": "VCN2 Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "vcn2-db-standby",
+      "vcn": "vcn2",
+      "type": "database",
+      "label": "VCN2 DB Standby",
+      "subnet": "VCN2 Private DB",
+      "placement": "data",
+      "icon_key": "database"
+    }
+  ],
+  "connections": [
+    {
+      "id": "lpg-peering",
+      "type": "local-peering-gateway",
+      "from": "vcn1-lpg",
+      "to": "vcn2-lpg",
+      "label": "Local Peering",
+      "arrow": false
+    },
+    {
+      "id": "db-data-guard",
+      "type": "dataguard",
+      "from": "vcn1-db-primary",
+      "to": "vcn2-db-standby",
+      "label": "Data Guard",
+      "arrow": false
+    }
+  ],
+  "flows": [
+    {
+      "from": "internet-users",
+      "to": "vcn1-public-lb",
+      "label": "HTTPS"
+    },
+    {
+      "from": "vcn1-public-lb",
+      "to": "vcn1-web",
+      "label": "Web backend"
+    },
+    {
+      "from": "vcn1-web",
+      "to": "vcn1-internal-lb",
+      "label": "Internal LB"
+    },
+    {
+      "from": "vcn1-internal-lb",
+      "to": "vcn1-app",
+      "label": "App backend"
+    },
+    {
+      "from": "vcn1-app",
+      "to": "vcn1-db-primary",
+      "label": "SQL"
+    }
+  ],
+  "validation": {
+    "best_practice_deviations": [
+      "Failover control plane, DNS/GSLB policy, RTO/RPO, and Data Guard protection mode are outside this fixture."
+    ],
+    "unresolved_questions": [
+      "Confirm DNS/GSLB cutover policy, RTO/RPO, and standby activation automation."
+    ]
+  }
+}
