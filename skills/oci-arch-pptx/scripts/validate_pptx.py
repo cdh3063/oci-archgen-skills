@@ -21,6 +21,7 @@ DRAWINGML_TEXT_TAG = "{http://schemas.openxmlformats.org/drawingml/2006/main}t"
 EMU_PER_INCH = 914400
 NS_A = "http://schemas.openxmlformats.org/drawingml/2006/main"
 NS_P = "http://schemas.openxmlformats.org/presentationml/2006/main"
+NS_CT = "http://schemas.openxmlformats.org/package/2006/content-types"
 NS = {"a": NS_A, "p": NS_P}
 
 LAYOUT_TOLERANCE_IN = 0.02
@@ -144,14 +145,43 @@ def validate(path: Path) -> list[str]:
             if not slide_parts:
                 errors.append("missing slide XML parts")
 
-            if "ppt/presentation.xml" in names:
+            if "[Content_Types].xml" in names:
                 try:
-                    ET.fromstring(package.read("ppt/presentation.xml"))
+                    content_types = ET.fromstring(package.read("[Content_Types].xml"))
                 except ET.ParseError as exc:
-                    errors.append(f"presentation.xml parse error: {exc}")
+                    errors.append(f"[Content_Types].xml parse error: {exc}")
+                else:
+                    errors.extend(validate_content_types(content_types, names))
+
+            for xml_part in sorted(name for name in names if name.endswith(".xml")):
+                try:
+                    ET.fromstring(package.read(xml_part))
+                except ET.ParseError as exc:
+                    errors.append(f"{xml_part} parse error: {exc}")
     except zipfile.BadZipFile:
         return [f"not a valid PPTX zip package: {path}"]
 
+    return errors
+
+
+def validate_content_types(content_types: ET.Element, package_names: set[str]) -> list[str]:
+    errors: list[str] = []
+    defaults = {
+        item.attrib.get("Extension", "").lower(): item.attrib.get("ContentType", "")
+        for item in content_types.findall(f"{{{NS_CT}}}Default")
+    }
+    media_extensions = {
+        Path(name).suffix.lower().lstrip(".")
+        for name in package_names
+        if name.startswith("ppt/media/") and Path(name).suffix
+    }
+
+    if "svg" in defaults and "svg" not in media_extensions:
+        errors.append("[Content_Types].xml declares SVG media but no .svg part exists")
+    if "svg" in media_extensions and defaults.get("svg") != "image/svg+xml":
+        errors.append("[Content_Types].xml missing image/svg+xml default for .svg media")
+    if "png" in media_extensions and defaults.get("png") != "image/png":
+        errors.append("[Content_Types].xml missing image/png default for .png media")
     return errors
 
 
