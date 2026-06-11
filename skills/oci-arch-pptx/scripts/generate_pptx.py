@@ -2043,7 +2043,11 @@ class Renderer:
                 right_ys.append(y)
             else:
                 place_right = peering_side == "left" and key in {"internet-gateway", "nat-gateway"}
-                x = vcn_box.right + 0.14 if place_right else vcn_box.x - 0.78
+                if key in {"internet-gateway", "nat-gateway"}:
+                    boundary_x = vcn_box.right if place_right else vcn_box.x
+                    x = boundary_x - STANDARD_ICON_SIZE / 2
+                else:
+                    x = vcn_box.right + 0.14 if place_right else vcn_box.x - 0.78
                 occupied = right_ys if place_right else left_ys
                 y = self._avoid_gateway_overlap(
                     self._gateway_y(key, gateway_type, subnet_boxes, vcn_box),
