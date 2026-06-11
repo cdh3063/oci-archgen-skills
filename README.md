@@ -4,6 +4,8 @@ Skills for generating editable Oracle Cloud Infrastructure (OCI) architecture Po
 
 GitHub Pages preview: https://cdh3063.github.io/oci-archgen-skills/
 
+![Generated OCI HA architecture PPTX preview](docs/assets/ha-waf-dataguard.png)
+
 ## Included Skills
 
 ### `oci-arch-pptx`
