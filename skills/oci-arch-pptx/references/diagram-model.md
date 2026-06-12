@@ -155,12 +155,13 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Place user/internet actors outside the OCI region boundary.
 - Place gateways near the VCN edge. IGW/NAT/DRG/FastConnect-adjacent symbols are placed on the left side; Service Gateway is placed between the VCN and OSN when OSN is shown.
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet.
-- Place LPG/RPG gateways on facing VCN edges aligned with the second private subnet when possible.
+- Place LPG/RPG gateways on facing VCN edges near the private App tier when possible, keeping them visually separated from DB/Data Guard lines.
 - Place On-Prem/Customer Data Center/CPE outside the Region and connect it to DRG with a `connections` entry such as FastConnect or VPN.
 - Public/edge subnets require an Internet Gateway. Private subnets should have NAT Gateway and/or Service Gateway when private egress or OCI public service access is modeled. OSN services require a Service Gateway.
 - Keep flow arrows sparse; show primary request flow and administration flow separately.
 - Use orthogonal elbow connectors with staggered offsets when multiple horizontal connector lines would overlap in the same corridor.
 - Use notes for security assumptions instead of overloading arrows with long text.
 - Default deck: title slide, architecture diagram slide, assumptions/best-practice notes slide, operational/best-practice checkpoint slide.
+- The architecture diagram slide footer should use a 10 pt red AI-output verification disclaimer rather than a flow-readability explanation.
 - If `operational_advice` is present, use it for the final checkpoint slide. Otherwise generate checkpoint guidance from the modeled topology, including DR-specific RTO/RPO, failover/failback, replication, DNS/GSLB, and runbook items when DR is in scope.
 - Keep the architecture diagram slide full-page and editable: containers, icons, labels, arrows, and notes should remain PowerPoint objects when practical.

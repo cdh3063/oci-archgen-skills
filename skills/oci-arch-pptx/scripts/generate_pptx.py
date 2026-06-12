@@ -118,6 +118,8 @@ CONNECTOR_LABEL_COLOR = "312D2A"
 CONNECTOR_LABEL_FILL = None
 CONNECTOR_LABEL_SIZE = 7.4
 DRAW_CONNECTOR_LABELS = False
+DIAGRAM_FOOTER_SIZE = 10.0
+DIAGRAM_FOOTER_COLOR = "FF0000"
 
 EDGE_ICON_KEYS = {
     "api-gateway",
@@ -1022,18 +1024,14 @@ class Renderer:
             self._draw_flows(slide, model)
         else:
             self._draw_data_guard_exceptions(slide, model)
-        legend = (
-            "Primary flow arrows only; NSG/security policy details are listed on the notes slide."
-            if show_flows
-            else "Only the DataGuard DB relationship is shown; other traffic and security details are listed on the notes slide."
-        )
+        legend = self._diagram_footer_disclaimer(model)
 
         slide.add_text(
             "Legend",
             Box(0.35, 6.93, 12.25, 0.24),
             legend,
-            size_pt=7.5,
-            color="6B7280",
+            size_pt=DIAGRAM_FOOTER_SIZE,
+            color=DIAGRAM_FOOTER_COLOR,
         )
 
     def _add_multi_vcn_diagram_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
@@ -1160,26 +1158,18 @@ class Renderer:
         self._draw_peering_exceptions(slide, model)
 
         show_flows = self._should_draw_flows(model)
-        is_ko = self._is_korean_model(model)
         if show_flows:
             self._draw_flows(slide, model)
-            if is_ko:
-                legend = "주요 트래픽 흐름은 화살표로, 네트워크 피어링은 게이트웨이 연결로 표시했습니다."
-            else:
-                legend = "Primary flow arrows are shown; network peering is shown as a gateway connection."
         else:
             self._draw_data_guard_exceptions(slide, model)
-            if is_ko:
-                legend = "가독성을 위해 VCN Peering과 Data Guard DB 관계만 표시하고, 기타 트래픽/보안 세부사항은 노트 슬라이드에 정리했습니다."
-            else:
-                legend = "Only VCN peering and the DataGuard DB relationship are shown; other traffic and security details are listed on the notes slide."
+        legend = self._diagram_footer_disclaimer(model)
 
         slide.add_text(
             "Legend",
             Box(0.35, 6.93, 12.25, 0.24),
             legend,
-            size_pt=7.5,
-            color="6B7280",
+            size_pt=DIAGRAM_FOOTER_SIZE,
+            color=DIAGRAM_FOOTER_COLOR,
         )
 
     def _multi_vcn_layout_requested(self, model: dict[str, Any]) -> bool:
@@ -1205,6 +1195,11 @@ class Renderer:
 
     def _region_display_label(self, region: dict[str, Any]) -> str:
         return str(region.get("oci_region") or region.get("name") or "OCI Region")
+
+    def _diagram_footer_disclaimer(self, model: dict[str, Any]) -> str:
+        if self._is_korean_model(model):
+            return "본 문서는 AI 산출물이므로 정확하지 않을 수 있습니다. 반드시 검증 후 사용하십시오."
+        return "This document is AI-generated and may be inaccurate. Validate it thoroughly before use."
 
     def _is_korean_model(self, model: dict[str, Any]) -> bool:
         language = normalize_lookup(model.get("language"))
@@ -3237,8 +3232,8 @@ class Renderer:
             "rpg",
         } or key == "remote-peering-gateway":
             private_boxes = self._private_tier_boxes(subnet_boxes)
-            if len(private_boxes) >= 2:
-                return private_boxes[1].cy - STANDARD_ICON_SIZE / 2
+            if private_boxes:
+                return private_boxes[0].cy - STANDARD_ICON_SIZE / 2
             return vcn_box.cy - 0.21
         if key == "dynamic-routing-gateway" or gateway_type in {"drg", "dynamic-routing-gateway"}:
             box = self._first_matching_box(lower, ["management", "mgmt", "security", "inspection"])

@@ -49,6 +49,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - For redundant Web/App tiers, show the public LoadBalancer in Edge/Public with Web servers as its backend set, and show a private/internal LoadBalancer in the private App tier with App servers as its backend set.
    - Preserve explicit `subnet` assignments; otherwise use `placement`, then infer placement from service `type`, `icon_key`, and `label`.
    - Label all subnets and tiers. Avoid connector labels on dense architecture slides unless the user explicitly asks for them; keep protocol or security-rule details in notes instead.
+   - Put a concise AI-output verification disclaimer in the architecture diagram slide footer, styled at 10 pt in red.
    - Include Korean labels when the user writes Korean unless they request English.
    - Keep all icons, labels, containers, arrows, and notes editable in PowerPoint whenever practical.
 
@@ -90,7 +91,7 @@ Region
 - Place services only inside their owning subnet unless the resource is external to OCI or is a VCN-level gateway.
 - Place VCN-level gateways inside the Region and adjacent to the VCN edge: IGW/NAT/DRG on the left side when shown, Service Gateway on the boundary between VCN and OSN when shown.
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet instead of directly beside IGW.
-- For local VCN peering, place `LPG` gateways on facing VCN edges aligned with the second private subnet when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule.
+- For local VCN peering, place `LPG` gateways on facing VCN edges near the private App tier when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule and keep them visually separated from DB/Data Guard lines.
 - Put external clients, internet actors, On-Prem, CPE, and Customer Data Center endpoints outside the Region boundary. Render Internet Users with the `user` icon, not a cloud shape. Connect On-Prem/CPE to DRG with `connections` entries such as FastConnect or VPN.
 - Keep gateway labels short (`IGW`, `NAT`, `DRG`, `SGW`) when space is tight, and expand the meaning in slide notes.
 - Keep arrows sparse: show only the primary ingress path, admin path through bastion, private app-to-data path, and private egress/service-access path when relevant. If these lines reduce readability, omit connection lines from the diagram slide and keep flow details in notes.

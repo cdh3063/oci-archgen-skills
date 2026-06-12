@@ -144,6 +144,12 @@ for model in skills/oci-arch-pptx/fixtures/validation/*-model.json; do
 done
 ```
 
+Before pushing behavior changes:
+
+- Update `docs/patch-notes.html`.
+- Regenerate and validate any affected example or user-facing PPTX output.
+- Reinstall or sync the changed skill into the runtime directory used for verification, such as `~/.codex/skills`.
+
 ## License
 
 Code in this repository is released under the MIT License. OCI icons and Oracle brand assets are not covered by the MIT License; see `NOTICE.md`.
