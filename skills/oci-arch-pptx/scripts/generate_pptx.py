@@ -867,6 +867,7 @@ class Renderer:
         self._add_title_slide(package.new_slide(), model)
         self._add_diagram_slide(package.new_slide(), model)
         self._add_notes_slide(package.new_slide(), model)
+        self._add_operational_advice_slide(package.new_slide(), model)
         package.write(output_path, title=str(model.get("title") or "OCI Architecture"))
 
     def _add_title_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
@@ -1159,12 +1160,19 @@ class Renderer:
         self._draw_peering_exceptions(slide, model)
 
         show_flows = self._should_draw_flows(model)
+        is_ko = self._is_korean_model(model)
         if show_flows:
             self._draw_flows(slide, model)
-            legend = "Primary flow arrows are shown; network peering is shown as a gateway connection."
+            if is_ko:
+                legend = "주요 트래픽 흐름은 화살표로, 네트워크 피어링은 게이트웨이 연결로 표시했습니다."
+            else:
+                legend = "Primary flow arrows are shown; network peering is shown as a gateway connection."
         else:
             self._draw_data_guard_exceptions(slide, model)
-            legend = "Only VCN peering and the DataGuard DB relationship are shown; other traffic and security details are listed on the notes slide."
+            if is_ko:
+                legend = "가독성을 위해 VCN Peering과 Data Guard DB 관계만 표시하고, 기타 트래픽/보안 세부사항은 노트 슬라이드에 정리했습니다."
+            else:
+                legend = "Only VCN peering and the DataGuard DB relationship are shown; other traffic and security details are listed on the notes slide."
 
         slide.add_text(
             "Legend",
@@ -1197,6 +1205,20 @@ class Renderer:
 
     def _region_display_label(self, region: dict[str, Any]) -> str:
         return str(region.get("oci_region") or region.get("name") or "OCI Region")
+
+    def _is_korean_model(self, model: dict[str, Any]) -> bool:
+        language = normalize_lookup(model.get("language"))
+        if language.startswith(("ko", "kor", "korean")):
+            return True
+        if language.startswith(("en", "eng", "english")):
+            return False
+
+        text_parts = [
+            str(model.get("title") or ""),
+            " ".join(map(str, model.get("assumptions") or [])),
+            " ".join(map(str, model.get("architecture_notes") or [])),
+        ]
+        return bool(re.search(r"[가-힣]", " ".join(text_parts)))
 
     def _same_region(self, vcns: list[dict[str, Any]], model: dict[str, Any]) -> bool:
         region_keys = {
@@ -1263,11 +1285,39 @@ class Renderer:
         self.boxes["internet users"] = user_box
 
     def _add_notes_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        is_ko = self._is_korean_model(model)
+        if is_ko:
+            title = "가정, 보안 및 렌더링 노트"
+            assumptions_title = "가정"
+            notes_title = "보안 및 Best-Practice 노트"
+            rendering_title = "렌더링 노트"
+            no_assumptions = "모델에 명시된 가정이 없습니다."
+            no_arch_notes = "모델에 추가 아키텍처 노트가 없습니다."
+            deviations_prefix = "Best-Practice 편차: "
+            unresolved_prefix = "미확정 사항: "
+            default_icon_note = "사용된 OCI 아이콘은 추출된 아이콘 자산에서 로드했습니다."
+            editable_note = "컨테이너, 라벨, 화살표, 노트는 PowerPoint에서 편집 가능한 객체입니다."
+            icon_embed_note = "OCI 서비스 아이콘은 이미지 자산으로 포함됩니다."
+            flow_note = "가독성을 위해 아키텍처 슬라이드에는 VCN Peering과 Data Guard DB 연결선만 표시했습니다."
+        else:
+            title = "Assumptions, Security Notes, and Rendering Notes"
+            assumptions_title = "Assumptions"
+            notes_title = "Security and best-practice notes"
+            rendering_title = "Rendering notes"
+            no_assumptions = "No explicit assumptions were supplied in the model."
+            no_arch_notes = "No additional architecture notes were supplied in the model."
+            deviations_prefix = "Best-practice deviations: "
+            unresolved_prefix = "Unresolved questions: "
+            default_icon_note = "All used OCI icons were loaded from extracted icon assets."
+            editable_note = "Containers, labels, arrows, and notes are editable PowerPoint objects."
+            icon_embed_note = "OCI service icons are embedded image assets."
+            flow_note = "Only VCN peering and the DataGuard DB connection line are shown on the architecture slide for readability."
+
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "F8FAFC", None)
         slide.add_text(
             "Notes title",
             Box(0.55, 0.35, 11.8, 0.45),
-            "Assumptions, Security Notes, and Rendering Notes",
+            title,
             size_pt=21,
             color="111827",
             bold=True,
@@ -1280,25 +1330,25 @@ class Renderer:
         unresolved = list(validation.get("unresolved_questions") or [])
 
         if not assumptions:
-            assumptions = ["No explicit assumptions were supplied in the model."]
+            assumptions = [no_assumptions]
         if not arch_notes:
-            arch_notes = ["No additional architecture notes were supplied in the model."]
+            arch_notes = [no_arch_notes]
 
-        left_text = self._section_text("Assumptions", assumptions)
+        left_text = self._section_text(assumptions_title, assumptions)
         right_items = arch_notes[:]
         if deviations:
-            right_items.append("Best-practice deviations: " + "; ".join(map(str, deviations)))
+            right_items.append(deviations_prefix + "; ".join(map(str, deviations)))
         if unresolved:
-            right_items.append("Unresolved questions: " + "; ".join(map(str, unresolved)))
-        right_text = self._section_text("Security and best-practice notes", right_items)
+            right_items.append(unresolved_prefix + "; ".join(map(str, unresolved)))
+        right_text = self._section_text(notes_title, right_items)
 
         render_items = sorted(self.icon_notes)
         if not render_items:
-            render_items = ["All used OCI icons were loaded from extracted icon assets."]
-        render_items.append("Containers, labels, arrows, and notes are editable PowerPoint objects.")
-        render_items.append("OCI service icons are embedded image assets in this first renderer slice.")
+            render_items = [default_icon_note]
+        render_items.append(editable_note)
+        render_items.append(icon_embed_note)
         if not self._should_draw_flows(model):
-            render_items.append("Only VCN peering and the DataGuard DB connection line are shown on the architecture slide for readability.")
+            render_items.append(flow_note)
 
         slide.add_shape("Assumptions box", Box(0.65, 1.1, 5.85, 3.25), "FFFFFF", "CBD5E1", 1.0)
         slide.add_text(
@@ -1320,10 +1370,281 @@ class Renderer:
         slide.add_text(
             "Rendering notes",
             Box(0.85, 4.75, 11.55, 1.56),
-            self._section_text("Rendering notes", render_items),
+            self._section_text(rendering_title, render_items),
             size_pt=8.3,
             color="374151",
         )
+
+    def _add_operational_advice_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        is_ko = self._is_korean_model(model)
+        if is_ko:
+            title = "운영 및 Best-Practice 체크포인트"
+            subtitle = "구현 전 애플리케이션/운영/보안/DB 담당자와 함께 검토할 항목입니다."
+            footer = "애플리케이션 오너, 운영팀, 보안 담당자, DB 담당자와 함께 최종 확정하십시오."
+            section_titles = {
+                "resilience": "복원력 / DR",
+                "security": "보안 / 네트워크",
+                "operations": "운영",
+                "cost": "비용 / 성능",
+                "open": "확정 필요 사항",
+            }
+        else:
+            title = "Operational and Best-Practice Checkpoints"
+            subtitle = "Use this as a review checklist before promoting the architecture to implementation."
+            footer = "Finalize these checkpoints with the application owner, operations team, security owner, and database owner."
+            section_titles = {
+                "resilience": "Resilience and DR",
+                "security": "Security and Network",
+                "operations": "Operations",
+                "cost": "Cost and Performance",
+                "open": "Open Decisions",
+            }
+
+        slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "F8FAFC", None)
+        slide.add_text(
+            "Advice title",
+            Box(0.55, 0.35, 11.8, 0.45),
+            title,
+            size_pt=20,
+            color="111827",
+            bold=True,
+        )
+        slide.add_text(
+            "Advice subtitle",
+            Box(0.58, 0.84, 11.9, 0.24),
+            subtitle,
+            size_pt=9.2,
+            color="6B7280",
+        )
+
+        sections = self._operational_advice_sections(model)
+        boxes = [
+            ("resilience", Box(0.62, 1.18, 3.82, 2.24), sections["resilience"]),
+            ("security", Box(4.76, 1.18, 3.82, 2.24), sections["security"]),
+            ("operations", Box(8.90, 1.18, 3.82, 2.24), sections["operations"]),
+            ("cost", Box(0.62, 3.70, 5.85, 2.34), sections["cost"]),
+            ("open", Box(6.78, 3.70, 5.94, 2.34), sections["open"]),
+        ]
+
+        for key, box, items in boxes:
+            section_title = section_titles[key]
+            slide.add_shape(f"Advice {key} box", box, "FFFFFF", "CBD5E1", 1.0)
+            slide.add_text(
+                f"Advice {key} title",
+                Box(box.x + 0.16, box.y + 0.13, box.w - 0.32, 0.24),
+                section_title,
+                size_pt=10.6,
+                color="111827",
+                bold=True,
+            )
+            slide.add_text(
+                f"Advice {key} items",
+                Box(box.x + 0.18, box.y + 0.48, box.w - 0.36, box.h - 0.62),
+                self._bullet_text(items),
+                size_pt=7.8,
+                color="374151",
+                margin=0.03,
+            )
+
+        slide.add_text(
+            "Advice footer",
+            Box(0.58, 6.86, 12.0, 0.24),
+            footer,
+            size_pt=8,
+            color="6B7280",
+        )
+
+    def _operational_advice_sections(self, model: dict[str, Any]) -> dict[str, list[str]]:
+        is_ko = self._is_korean_model(model)
+        explicit = model.get("operational_advice")
+        if is_ko:
+            sections: dict[str, list[str]] = {
+                "resilience": [
+                    "각 티어의 SLA/SLO와 장애 도메인 기준을 정의하십시오.",
+                    "백업, 복구, 복원 검증 범위를 확정하십시오.",
+                    "상태 점검과 트래픽 전환 책임자를 문서화하십시오.",
+                ],
+                "security": [
+                    "NSG/Security List 규칙을 최소 권한 기준으로 검토하십시오.",
+                    "App/DB 티어는 private-only로 유지하십시오.",
+                    "IAM, Vault/Secret, Audit Logging 책임 범위를 확정하십시오.",
+                ],
+                "operations": [
+                    "모니터링 지표, 알람, 온콜 에스컬레이션을 정의하십시오.",
+                    "패치, 유지보수, 롤백 Runbook을 준비하십시오.",
+                    "구성 변경은 버전 관리/IaC 기준으로 추적하십시오.",
+                ],
+                "cost": [
+                    "Compute, DB, Load Balancer 크기를 실제 부하 기준으로 산정하십시오.",
+                    "Autoscaling, Reserved Capacity, Standby 유휴 비용을 검토하십시오.",
+                    "Go-live 전 지연시간, 처리량, Quota 한계를 검증하십시오.",
+                ],
+                "open": [],
+            }
+        else:
+            sections = {
+                "resilience": [
+                    "Define SLA/SLO targets and failure domains for each tier.",
+                    "Confirm backup, restore, and recovery validation scope.",
+                    "Document health checks and traffic cutover ownership.",
+                ],
+                "security": [
+                    "Review NSG/security-list rules for least privilege.",
+                    "Keep private app and database tiers private-only.",
+                    "Confirm IAM, Vault/secrets, and audit logging responsibilities.",
+                ],
+                "operations": [
+                    "Define monitoring metrics, alarms, and on-call escalation.",
+                    "Prepare patching, maintenance, and rollback runbooks.",
+                    "Track configuration changes through version control/IaC.",
+                ],
+                "cost": [
+                    "Size compute, database, and load balancers against real workload.",
+                    "Review autoscaling, reserved capacity, and idle standby cost.",
+                    "Validate latency, throughput, and quota limits before go-live.",
+                ],
+                "open": [],
+            }
+
+        explicit_keys: set[str] = set()
+        if isinstance(explicit, dict):
+            for key in sections:
+                values = explicit.get(key)
+                if isinstance(values, list) and values:
+                    sections[key] = [str(item) for item in values if str(item).strip()]
+                    explicit_keys.add(key)
+
+        if self._model_has_dr(model):
+            if is_ko:
+                dr_resilience = [
+                    "RTO/RPO를 정의하고 복제 모드와 매핑하십시오.",
+                    "Failover/Failback Runbook과 의사결정 권한을 문서화하십시오.",
+                    "정기 DR 모의훈련과 증적 수집 절차를 운영하십시오.",
+                ]
+                standby_activation = "가능한 Standby 활성화 단계는 자동화하십시오."
+                open_items = [
+                    "RTO/RPO 목표와 비즈니스 승인",
+                    "DNS/GSLB 또는 Traffic Management 전환 정책",
+                    "Failback 순서와 데이터 재동기화 책임자",
+                ]
+            else:
+                dr_resilience = [
+                    "Define RTO/RPO and map them to the replication mode.",
+                    "Document failover and failback runbooks with decision authority.",
+                    "Schedule regular DR drills and evidence collection.",
+                ]
+                standby_activation = "Automate standby activation steps where practical."
+                open_items = [
+                    "RTO/RPO target and business approval",
+                    "DNS/GSLB or Traffic Management cutover policy",
+                    "Failback sequence and data resynchronization owner",
+                ]
+            if "resilience" in explicit_keys:
+                sections["resilience"].extend(dr_resilience)
+            else:
+                sections["resilience"] = dr_resilience
+            sections["operations"].insert(0, standby_activation)
+            sections["open"].extend(open_items)
+
+        if self._model_has_database(model):
+            if is_ko:
+                sections["resilience"].append("Go-live 전 DB 복구 또는 Switchover를 검증하십시오.")
+                sections["operations"].append("복제 지연, 백업 상태, DB 용량을 모니터링하십시오.")
+            else:
+                sections["resilience"].append("Test database restore or switchover before go-live.")
+                sections["operations"].append("Monitor replication lag, backup status, and DB capacity.")
+
+        if self._model_has_public_ingress(model):
+            if is_ko:
+                sections["security"].insert(0, "Public ingress는 승인된 LB/WAF 통제로 종단하십시오.")
+                sections["operations"].append("Public endpoint 상태와 인증서 만료를 모니터링하십시오.")
+            else:
+                sections["security"].insert(0, "Terminate public ingress through approved LB/WAF controls.")
+                sections["operations"].append("Monitor public endpoint health and certificate expiry.")
+
+        if self._oracle_service_network_services(model):
+            if is_ko:
+                sections["security"].append("Private Oracle service 접근을 위한 Service Gateway 라우팅을 검증하십시오.")
+            else:
+                sections["security"].append("Validate Service Gateway routing for private Oracle service access.")
+
+        validation = model.get("validation") or {}
+        for value in list(validation.get("unresolved_questions") or []):
+            text = str(value).strip()
+            if text:
+                sections["open"].append(text)
+        for value in list(validation.get("best_practice_deviations") or []):
+            text = str(value).strip()
+            if text:
+                prefix = "검토 필요 편차: " if is_ko else "Deviation to review: "
+                sections["open"].append(prefix + text)
+
+        if not sections["open"]:
+            if is_ko:
+                sections["open"] = [
+                    "운영 오너와 승인 프로세스",
+                    "Runbook 테스트 일정과 롤백 기준",
+                    "IaC 기준선과 변경 관리 프로세스",
+                ]
+            else:
+                sections["open"] = [
+                    "Production owner and approval workflow",
+                    "Runbook test date and rollback criteria",
+                    "IaC baseline and change-management process",
+                ]
+
+        return {key: self._dedupe_items(values, limit=4) for key, values in sections.items()}
+
+    def _model_has_dr(self, model: dict[str, Any]) -> bool:
+        text_parts: list[str] = [
+            str(model.get("title") or ""),
+            " ".join(map(str, model.get("architecture_notes") or [])),
+            " ".join(map(str, model.get("assumptions") or [])),
+        ]
+        for connection in list(model.get("connections") or []) + list(model.get("flows") or []):
+            if isinstance(connection, dict):
+                text_parts.extend(str(connection.get(key) or "") for key in ("id", "type", "label"))
+        for vcn in self._model_vcns(model):
+            text_parts.extend(str(vcn.get(key) or "") for key in ("id", "name", "role"))
+        text = normalize_lookup(" ".join(text_parts))
+        compact = text.replace(" ", "")
+        return any(term in compact for term in ("dr", "dataguard", "standby", "disasterrecovery"))
+
+    def _model_has_database(self, model: dict[str, Any]) -> bool:
+        for resource in model.get("resources") or []:
+            if isinstance(resource, dict) and self._is_database_resource(resource):
+                return True
+        return False
+
+    def _model_has_public_ingress(self, model: dict[str, Any]) -> bool:
+        if self._has_gateway_type(model, {"internet-gateway"}):
+            return True
+        for resource in model.get("resources") or []:
+            if not isinstance(resource, dict):
+                continue
+            text = normalize_lookup(" ".join(str(resource.get(key) or "") for key in ("type", "label", "placement", "subnet")))
+            if "public" in text or "edge" in text or "internet" in text:
+                return True
+        return False
+
+    def _dedupe_items(self, values: list[str], limit: int) -> list[str]:
+        seen: set[str] = set()
+        result: list[str] = []
+        for value in values:
+            item = re.sub(r"\s+", " ", str(value).strip())
+            if not item:
+                continue
+            key = normalize_lookup(item)
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(item)
+            if len(result) >= limit:
+                break
+        return result
+
+    def _bullet_text(self, items: list[str]) -> str:
+        return "\n".join(f"- {item}" for item in items)
 
     def _container_style(self, style_key: str) -> dict[str, Any]:
         styles = self.container_styles.get("styles", {})

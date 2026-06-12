@@ -110,6 +110,13 @@ Use this JSON-like contract as the intermediate representation before producing 
       "arrow": false
     }
   ],
+  "operational_advice": {
+    "resilience": ["string"],
+    "security": ["string"],
+    "operations": ["string"],
+    "cost": ["string"],
+    "open": ["string"]
+  },
   "validation": {
     "best_practice_deviations": ["string"],
     "unresolved_questions": ["string"]
@@ -154,5 +161,6 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Keep flow arrows sparse; show primary request flow and administration flow separately.
 - Use orthogonal elbow connectors with staggered offsets when multiple horizontal connector lines would overlap in the same corridor.
 - Use notes for security assumptions instead of overloading arrows with long text.
-- Default deck: title slide, architecture diagram slide, assumptions/best-practice notes slide.
+- Default deck: title slide, architecture diagram slide, assumptions/best-practice notes slide, operational/best-practice checkpoint slide.
+- If `operational_advice` is present, use it for the final checkpoint slide. Otherwise generate checkpoint guidance from the modeled topology, including DR-specific RTO/RPO, failover/failback, replication, DNS/GSLB, and runbook items when DR is in scope.
 - Keep the architecture diagram slide full-page and editable: containers, icons, labels, arrows, and notes should remain PowerPoint objects when practical.

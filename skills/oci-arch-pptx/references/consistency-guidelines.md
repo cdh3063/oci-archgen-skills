@@ -50,6 +50,7 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - Redundant Web/App tiers must use Public Load Balancer -> Web backend set and Private/Internal Load Balancer -> App backend set unless the user explicitly asks for direct node pairing.
 - DR diagrams must show or explicitly defer health checks, failover trigger/control plane, replication mechanism, and standby activation behavior.
 - Security notes must cover at least LB-to-backend, bastion-to-private-target, app-to-database, private egress, and inter-region replication or peering.
+- Every generated architecture deck should include a final operational/best-practice checkpoint slide. For DR architectures, include RTO/RPO, failover/failback ownership, replication mode, DNS/GSLB cutover, monitoring, and DR drill checkpoints. For non-DR architectures, include security, monitoring, backup/restore, capacity, cost, runbook, and ownership checkpoints tailored to the modeled services.
 
 ## Validation Gate
 

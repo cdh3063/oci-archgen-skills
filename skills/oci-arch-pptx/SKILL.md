@@ -40,7 +40,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
 
 4. Render the PPTX deck.
    - If the Presentations skill/artifact-tool runtime is available, use it for editable PPTX generation and preview QA.
-   - Produce a concise deck by default: title slide, architecture diagram slide, assumptions/best-practice notes slide.
+   - Produce a concise deck by default: title slide, architecture diagram slide, assumptions/best-practice notes slide, and operational/best-practice checkpoint slide.
    - Use layered slide structure: Region, Availability Domain or Fault Domain, VCN, Subnets, Gateways/Security, Workloads, Data, Annotations.
    - Use containment from outside to inside: Region > AD/FD if shown > VCN > subnet > resources.
    - Use `references/container-style-map.json` for OCI toolkit-derived container line, fill, dash, and label styling.
@@ -140,6 +140,7 @@ Expected PPTX shape:
 - Slide 1: title and scope.
 - Slide 2: full-page architecture diagram using OCI iconography.
 - Slide 3: assumptions, security notes, and best-practice deviations if any.
+- Slide 4: operational and best-practice checkpoints tailored to the requested architecture, including DR runbook items when DR is in scope.
 
 ## Output Contract
 
