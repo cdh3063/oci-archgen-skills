@@ -8,7 +8,7 @@ Patch notes: https://cdh3063.github.io/oci-archgen-skills/patch-notes.html
 
 ![Generated OCI DR architecture PPTX preview](docs/assets/dr-remote-peering-3tier-dg.png)
 
-![Generated ODB@AWS Multi-AZ Active Data Guard PPTX preview](docs/assets/odb-aws-multi-az-adg.png)
+![Generated ODB@AWS Multi AZ DR Architecture PPTX preview](docs/assets/odb-aws-multi-az-dr-architecture.png)
 
 ## Included Skills
 
