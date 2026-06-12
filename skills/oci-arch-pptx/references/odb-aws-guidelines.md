@@ -20,6 +20,7 @@ Apply `references/rendering-guidelines.md` first for common slide structure, tit
 - Show the OCI child site inside the AWS data center/AZ area. Inside the child site, show the OCI VCN, client subnet, backup subnet when relevant, and Exadata databases or VM cluster.
 - When two Exadata database icons represent replicated database endpoints, label the relationship as Active Data Guard when requested. Keep the label close to the Exadata-to-Exadata connector and avoid overlapping OCI automation/control-plane lines.
 - Show OCI automation/control-plane relationships from the OCI parent region/control plane to the OCI child site, but avoid making control-plane lines louder than data-plane connectivity.
+- Anchor each OCI Automation/control-plane connector at the left-side midpoint of the `OCI Control Plane` box and route it to the right-side midpoint of each AZ-specific `OCI Child Site` box. Do not terminate OCI Automation lines on the AWS Data Center, OCI VCN, Exadata icon, or parent AWS/AZ container boundary.
 
 ## OCI Parent Region Rendering
 
