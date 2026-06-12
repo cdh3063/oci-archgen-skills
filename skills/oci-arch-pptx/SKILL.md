@@ -14,14 +14,21 @@ Use this skill to convert a user's natural-language OCI architecture request int
 1. Parse the user request into a structured model.
    - Preserve explicit user choices.
    - Mark assumptions instead of silently inventing requirements.
+   - Treat model `language` as the input/narrative language for slides 3 and 4, not as permission to localize architecture diagram labels.
+   - Keep architecture-facing labels in English: deck title, diagram title, container labels, subnet labels, resource labels, gateway labels, connector labels, and model-visible service labels.
    - Read `references/diagram-model.md` when creating or validating the model.
+   - Read `references/rendering-guidelines.md` before creating or reviewing any generated architecture deck.
    - Read `references/consistency-guidelines.md` before creating or reviewing any model that uses multiple regions, multiple VCNs, DR, custom renderer paths, or nonstandard container names.
+   - Read `references/odb-aws-guidelines.md` when the request mentions Oracle Database@AWS, ODB@AWS, OD@AWS, or Oracle Database at AWS.
 
 2. Apply OCI architecture guidance.
    - Read `references/oci-best-practices.md` before finalizing topology choices.
+   - Follow OCI/cloud architecture best practices by default. Do not weaken segmentation, private placement, HA, or security controls unless the user explicitly requests a nonrecommended design, and then record it as a best-practice deviation.
    - Prefer regional subnets unless the user asks for AD-specific subnets.
-   - Keep databases and application backends in private subnets.
-   - Use public or DMZ subnets only for internet-facing entry points such as public LoadBalancers and bastion access.
+   - Keep Web, App, and DB workloads in private subnets. Never place Web, App, DB, MySQL, Exadata, Autonomous Database, or application compute resources in a Public Subnet.
+   - Use Public Subnet only for internet-facing entry points such as Public Load Balancer, WAF/API Gateway when requested, and Bastion.
+   - Always include Bastion in the Public Subnet for OCI architecture diagrams.
+   - If the overall diagram has substantial unused left/right whitespace, render OSN to use that space. When OSN is rendered, include `IAM` and `Audit`; if any DB is present, also include `Object Storage`.
    - When both Web and App tiers are redundant, model the traffic chain as Public LoadBalancer -> Web backend set and Private/Internal LoadBalancer -> App backend set; do not pin individual Web nodes directly to individual App nodes unless the user explicitly requests that pattern.
    - For two-VCN DR, use top-level `vcns`. If both VCNs are in the same region, model Local Peering Gateway (`LPG`); if regions differ, model Remote Peering Gateway/Connection (`RPG`).
    - Add NSG/security-rule notes for LoadBalancer to backend, bastion to private targets, app to database, and private egress.
@@ -40,17 +47,23 @@ Use this skill to convert a user's natural-language OCI architecture request int
 
 4. Render the PPTX deck.
    - If the Presentations skill/artifact-tool runtime is available, use it for editable PPTX generation and preview QA.
+   - Apply `references/rendering-guidelines.md` to every generated deck, including OCI-only and Oracle Database@AWS decks.
    - Produce a concise deck by default: title slide, architecture diagram slide, assumptions/best-practice notes slide, and operational/best-practice checkpoint slide.
+   - Render every generated deck's title slide using the `assets/OCI_Icons.pptx` slide 1 title-page form: Oracle-branded white cover, Oracle logo placement, large architecture title, concise subtitle, and small bottom metadata. Do not make AWS or other non-OCI vendor branding the main cover signal even for multicloud diagrams.
    - Use layered slide structure: Region, Availability Domain or Fault Domain, VCN, Subnets, Gateways/Security, Workloads, Data, Annotations.
    - Use containment from outside to inside: Region > AD/FD if shown > VCN > subnet > resources.
    - Use `references/container-style-map.json` for OCI toolkit-derived container line, fill, dash, and label styling.
    - Read `references/connection-line-policy.md` when creating or modifying connector routing, line styling, or connector labels.
-   - Put internet-facing resources on the Edge/Public subnet, network firewall on Security/Inspection when present, private compute/application services on App/Private, database/data services on Data/Private, Oracle public services in OSN, and customer/on-prem endpoints outside the Region.
+   - Put internet-facing entry resources and Bastion on the Edge/Public subnet, network firewall on Security/Inspection when present, private Web/App services on Web/App private subnets, database/data services on Data/Private, Oracle public services in OSN, and customer/on-prem endpoints outside the Region.
    - For redundant Web/App tiers, show the public LoadBalancer in Edge/Public with Web servers as its backend set, and show a private/internal LoadBalancer in the private App tier with App servers as its backend set.
    - Preserve explicit `subnet` assignments; otherwise use `placement`, then infer placement from service `type`, `icon_key`, and `label`.
    - Label all subnets and tiers. Avoid connector labels on dense architecture slides unless the user explicitly asks for them; keep protocol or security-rule details in notes instead.
-   - Put a concise AI-output verification disclaimer in the architecture diagram slide footer, styled at 10 pt in red.
-   - Include Korean labels when the user writes Korean unless they request English.
+   - Always show the external actor as a `User` icon labeled `User`, not `Internet Users`.
+   - Render architecture component labels at 11 pt by default. If 11 pt text does not fit, resize or reposition containers/icons, shorten the label, or move details to notes rather than reducing the architecture label font.
+   - Use the standard icon size by default, but reduce service icon size when icons or labels would overflow their subnet/container.
+   - If a single-column subnet stack lacks vertical room and the VCN has horizontal room, use a 2 x N subnet layout instead of forcing all subnets into 1 x N.
+   - Put a concise AI-output verification disclaimer in the architecture diagram slide footer, styled at 10 pt in red and left-aligned.
+   - Keep architecture labels in English even when the user writes in Korean. Render slides 3 and 4 narrative content in the user's input language unless they request a different language.
    - Keep all icons, labels, containers, arrows, and notes editable in PowerPoint whenever practical.
 
 5. Validate output.
@@ -71,32 +84,39 @@ Use this hierarchy for the main architecture slide: Region > VCN > Subnet > Serv
 Region
   VCN
     Edge/Public Subnet
-      LoadBalancer, Bastion, other internet-facing entry points
+      Public LoadBalancer, Bastion, other internet-facing entry points
+    Web/Private Subnet
+      Web servers
     App/Private Subnet
-      Compute, web, WAS, application services
+      WAS, application services
     Data/Private Subnet
       Database, Exadata, storage-sensitive services
 ```
 
 - Draw Region as the outer boundary. Draw the VCN as the primary inner boundary.
+- Render Region containers with OCI grouping colors from `references/container-style-map.json`; do not use white or transparent fill for OCI Region or OCI parent region boundaries.
 - When the model has top-level `vcns`, draw VCNs side by side. Use one Region boundary for same-region local peering and separate Region boundaries for cross-region remote peering.
-- Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, App/Private, Data/Private, Management. Use a single vertical stack up to four subnets; for five or more subnets, use a VCN-internal grid unless the model explicitly sets `layout.subnet_columns`.
+- Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, Web/Private, App/Private, Data/Private, Management. Use a single vertical stack up to three subnets; for four or more subnets, consider a 2 x N or VCN-internal grid unless the model explicitly sets `layout.subnet_columns`.
+- For four or more subnet tiers, or when vertical room is tight and horizontal room is available, use a 2 x N VCN-internal subnet layout instead of shrinking labels/icons into unreadability.
 - Put the VCN icon centered on the VCN container's upper-right vertex without a text label.
 - Put Route Table and Security List icons tightly against each subnet container's upper-right corner without text labels.
 - Put an Oracle Service Network container to the right of the VCN with the same vertical size as the VCN when Oracle public services are represented. Label the container `OSN` to avoid narrow-box line wrapping.
 - Place the model's `oracle_service_network.services` or `public_services` icons vertically inside the Oracle Service Network. Do not draw Oracle Service Network services that are not present in the model.
-- When a resource has no explicit subnet, place API Gateway, LoadBalancer, Bastion, and WAF in Edge/Public; Network Firewall in Security/Inspection when available; Compute, Functions, OKE, and app services in App/Private; Database, Exadata, MySQL, NoSQL, Data Flow, and Database Management in Data/Private; IAM, Audit, Object Storage, Logging, Monitoring, Vault, and related public services in Oracle Service Network.
+- If the diagram has substantial unused left/right whitespace, render OSN even if it was not explicitly requested. Include `IAM` and `Audit` as baseline OSN services, and include `Object Storage` when a DB, MySQL HeatWave, Exadata, Autonomous Database, or other database tier is present.
+- When a resource has no explicit subnet, place API Gateway, Public LoadBalancer, Bastion, and WAF in Edge/Public; Network Firewall in Security/Inspection when available; Web servers in a private Web subnet; Compute, Functions, OKE, WAS, and app services in App/Private; Database, Exadata, MySQL, MySQL HeatWave, NoSQL, Data Flow, and Database Management in Data/Private; IAM, Audit, Object Storage, Logging, Monitoring, Vault, and related public services in Oracle Service Network.
+- Public Subnet must include Bastion and must not contain Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workload resources.
 - When Web and App tiers are both duplicated for HA, show Public LoadBalancer -> Web Server 1/2 and Private/Internal LoadBalancer -> App Server 1/2. Prefer naming the private LoadBalancer clearly; avoid connector labels in dense diagrams.
 - Keep non-badge OCI service icons at a consistent larger size; do not resize the VCN, Route Table, or Security List corner badges unless requested.
+- Put each service icon label directly under the icon, centered and close to the icon, following the normal OCI Architecture Diagram Toolkit icon-label treatment.
 - Place services only inside their owning subnet unless the resource is external to OCI or is a VCN-level gateway.
 - Place VCN-level gateways inside the Region and adjacent to the VCN edge: IGW/NAT/DRG on the left side when shown, Service Gateway on the boundary between VCN and OSN when shown.
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet instead of directly beside IGW.
 - For local VCN peering, place `LPG` gateways on facing VCN edges near the private App tier when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule and keep them visually separated from DB/Data Guard lines.
-- Put external clients, internet actors, On-Prem, CPE, and Customer Data Center endpoints outside the Region boundary. Render Internet Users with the `user` icon, not a cloud shape. Connect On-Prem/CPE to DRG with `connections` entries such as FastConnect or VPN.
+- Put the external `User` actor outside the Region boundary and always render it with the `user` icon. Do not label it `Internet Users`. Place On-Prem, CPE, and Customer Data Center endpoints outside the Region only when requested.
 - Keep gateway labels short (`IGW`, `NAT`, `DRG`, `SGW`) when space is tight, and expand the meaning in slide notes.
 - Keep arrows sparse: show only the primary ingress path, admin path through bastion, private app-to-data path, and private egress/service-access path when relevant. If these lines reduce readability, omit connection lines from the diagram slide and keep flow details in notes.
-- Render network circuits (`connections`, FastConnect, VPN) as connector lines; render workload/data traffic (`flows`) as arrows.
-- When connection lines are hidden for readability, keep only DB-to-DB `DataGuard` as a straight labeled connection line when Data Guard is modeled.
+- Render only architecture relationship lines such as VCN Peering and Data Guard/DG/ADG on the architecture slide. Do not draw workload chain lines such as `User -> IGW -> LB -> Web -> App -> DB`; summarize those traffic paths in notes instead.
+- When Data Guard is modeled, keep DB-to-DB `Data Guard`, `DG`, `ADG`, or `Active Data Guard` as a straight labeled connection line.
 - When several horizontal connector lines would overlap or run through the same corridor, prefer orthogonal elbow connectors with staggered offsets instead of stacking straight horizontal lines.
 - Do not render connector labels by default in dense diagrams. If protocol labels such as `HTTPS 443` or `SQL*Net` are required, use them only when they improve readability and do not collide with icons, containers, or lines.
 
@@ -156,8 +176,10 @@ When finishing a diagram task, provide:
 ## Resources
 
 - `assets/OCI_Icons.pptx`: local OCI Architecture Diagram Toolkit PowerPoint source.
+- `assets/cover/oracle-logo.png` and `assets/cover/oci-cover-cloud.png`: cover assets extracted from `OCI_Icons.pptx` slide 1 layout for generated title slides.
 - `references/oci-best-practices.md`: Oracle best-practice checklist and source URLs.
 - `references/diagram-model.md`: intermediate JSON model contract.
+- `references/rendering-guidelines.md`: common deck, slide, label, footer, connector, and validation rendering rules for OCI-only and multicloud architecture decks.
 - `references/consistency-guidelines.md`: consistency rules for keeping the model, renderer, validator, and final deck aligned.
 - `references/icon-source.md`: icon source and common icon mapping policy.
 - `references/icon-aliases.json`: required icon keys, aliases, and fallback keys for extraction.
@@ -166,6 +188,7 @@ When finishing a diagram task, provide:
 - `references/drawio-icon-inventory.json`: generated draw.io library match and SVG extraction inventory.
 - `references/container-style-map.json`: generated OCI draw.io Physical Grouping style map for Region, AD, FD, VCN, and subnet containers.
 - `references/connection-line-policy.md`: connector line, elbow-routing, arrowhead, and label policy based on OCI toolkit sample slides 29 and 30.
+- `references/odb-aws-guidelines.md`: Oracle Database@AWS topology and rendering rules, including AWS multi-AZ child-site placement with one OCI parent region rendered using standard OCI Region styling.
 - `references/subagents.md`: subagent workflow and role contracts.
 - `scripts/extract_oci_icons.py`: extracts image-based icon mappings from `assets/OCI_Icons.pptx`.
 - `scripts/extract_drawio_icons.py`: extracts selected or all service SVG assets from the local OCI draw.io `OCI Library.xml` and can register PNG fallback paths.

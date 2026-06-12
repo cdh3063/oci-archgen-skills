@@ -17,9 +17,12 @@ Checked against Oracle public documentation on 2026-06-05.
 - Anchor recommendations to the five OCI Well-Architected pillars: security and compliance, reliability and resilience, performance and cost optimization, operational efficiency, and distributed cloud.
 - Use regional subnets by default. Show AD-specific placement only when the user asks for it or when HA placement matters to the diagram.
 - Use tiered network segmentation:
-  - DMZ/public subnet for internet-facing load balancers and bastion access.
-  - Private application subnet for web, WAS, middleware, APIs, and internal compute.
+  - DMZ/public subnet for internet-facing load balancers, WAF/API Gateway when requested, and bastion access.
+  - Private web subnet for web servers when a Web tier is modeled.
+  - Private application subnet for WAS, middleware, APIs, and internal compute.
   - Private database subnet for DB systems, Exadata, Autonomous Database private endpoints, and storage-sensitive components.
+- Always include Bastion in Public Subnet for OCI architecture diagrams.
+- Do not place Web, App, DB, MySQL, MySQL HeatWave, Exadata, Autonomous Database, OKE, Functions, or private compute workloads in Public Subnet. If the user explicitly requests this nonrecommended design, flag it as a deviation and still present the recommended private placement unless they insist on the deviation.
 - Do not place database resources in public subnets unless the user explicitly requests a nonrecommended design; flag it as a deviation.
 - Show private subnet resources with private IP-only access.
 - Add NSG or security-list annotations when the diagram includes traffic flows:
@@ -32,6 +35,7 @@ Checked against Oracle public documentation on 2026-06-05.
   - NAT gateway for private outbound internet access without inbound exposure.
   - Service gateway for private access to Oracle services such as Object Storage backups.
   - DRG/FastConnect/VPN for private on-premises or inter-region connectivity.
+- When the diagram has substantial unused left/right whitespace, show OSN rather than leaving the slide sparse. Include IAM and Audit as baseline services. If a DB tier is present, include Object Storage for backup/export/private Oracle service access context.
 - For public load balancers, prefer a regional public/DMZ subnet and HA placement across availability domains where the region supports it.
 - For HA, represent redundancy explicitly:
   - Minimum two web/application nodes when the user asks for HA or gives two instances.
@@ -44,6 +48,8 @@ Checked against Oracle public documentation on 2026-06-05.
 ## Review Flags
 
 - Public IP on DB or private app nodes.
+- Web/App/DB resources placed in Public Subnet.
+- Public Subnet without Bastion.
 - Internet gateway route attached to private DB subnet.
 - Open SSH/RDP from `0.0.0.0/0`.
 - Backends accepting traffic from the internet instead of only from the load balancer.

@@ -97,7 +97,7 @@
 
       .details {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
         gap: 12px;
         margin-top: 18px;
       }
@@ -134,7 +134,7 @@
     <main>
       <header>
         <h1>OCI ArchGen Skills</h1>
-        <p>Codex skills for generating editable Oracle Cloud Infrastructure architecture PowerPoint diagrams.</p>
+        <p>Codex skills for generating editable Oracle Cloud Infrastructure and Oracle Database@AWS architecture PowerPoint diagrams.</p>
         <div class="actions">
           <a class="button primary" href="https://github.com/cdh3063/oci-archgen-skills">View Repository</a>
           <a class="button" href="patch-notes.html">Patch Notes</a>
@@ -150,6 +150,13 @@
         </div>
       </section>
 
+      <section class="preview" aria-label="Generated ODB@AWS architecture PPTX preview">
+        <img src="assets/odb-aws-multi-az-adg.png" alt="Generated Oracle Database@AWS Multi-AZ architecture preview with VPCs, ODB Peering, OCI Child Sites, one OCI Parent Region, and Active Data Guard.">
+        <div class="caption">
+          Oracle Database@AWS sample output with AWS Availability Zones, VPC connectivity, ODB Peering, OCI Child Sites, one OCI Parent Region, and Active Data Guard.
+        </div>
+      </section>
+
       <section class="details" aria-label="Project highlights">
         <div class="detail">
           <strong>Editable PPTX</strong>
@@ -162,6 +169,10 @@
         <div class="detail">
           <strong>Validation</strong>
           <p>Includes package, model coverage, containment, icon sizing, and layout checks for generated diagrams.</p>
+        </div>
+        <div class="detail">
+          <strong>ODB@AWS</strong>
+          <p>Documents ODB@AWS topology patterns with AWS Region/AZ, VPC, Transit Gateway, ODB Peering, OCI Child Site, OCI Parent Region, and Active Data Guard guidance.</p>
         </div>
       </section>
     </main>

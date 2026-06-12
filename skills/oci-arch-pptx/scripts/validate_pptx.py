@@ -26,8 +26,9 @@ NS = {"a": NS_A, "p": NS_P}
 
 LAYOUT_TOLERANCE_IN = 0.02
 CONNECTOR_LABEL_OVERLAP_LIMIT_IN = 0.16
-STANDARD_ICON_SIZE_IN = 0.48
-STANDARD_ICON_LABEL_SIZE = "700"
+STANDARD_ICON_SIZE_IN = 0.56
+MIN_STANDARD_ICON_SIZE_IN = 0.38
+STANDARD_ICON_LABEL_SIZE = "1100"
 VCN_BADGE_SIZE_IN = 0.30
 SUBNET_BADGE_SIZE_IN = 0.23
 EXPECTED_LABEL_LATIN_FONT = "Aptos"
@@ -244,7 +245,14 @@ def validate_model_layout_rules(
 
     checks += validate_model_resource_containment(model, elements, errors, warnings)
     checks += validate_model_osn_presence(model, elements, errors)
+    checks += validate_model_osn_baseline_rules(model, errors)
     checks += validate_model_gateway_route_rules(model, errors, warnings)
+    checks += validate_model_public_subnet_rules(
+        model,
+        elements,
+        model_subnet_boxes(model, elements),
+        errors,
+    )
     return checks, errors, warnings
 
 
@@ -400,8 +408,11 @@ def validate_standard_icon_sizes(
         if not name.startswith("Icon "):
             continue
         for item in matches:
-            checks += assert_size(
-                item, STANDARD_ICON_SIZE_IN, STANDARD_ICON_SIZE_IN, errors
+            checks += assert_size_range(
+                item,
+                MIN_STANDARD_ICON_SIZE_IN,
+                STANDARD_ICON_SIZE_IN,
+                errors,
             )
     return checks
 
@@ -617,6 +628,32 @@ def validate_model_osn_presence(
     return checks
 
 
+def validate_model_osn_baseline_rules(
+    model: dict[str, Any],
+    errors: list[str],
+) -> int:
+    services = expected_osn_services(model)
+    if not services:
+        return 1
+    checks = 0
+    service_text = " ".join(
+        " ".join(expected_service_labels(service)) for service in services
+    )
+    normalized = normalize_lookup(service_text)
+    compact = normalized.replace(" ", "").replace("-", "")
+    for required in ("iam", "audit"):
+        if required in compact:
+            checks += 1
+        else:
+            errors.append(f"OSN baseline service is missing: {required.upper()}")
+    if model_has_database_resource(model):
+        if "objectstorage" in compact or "object storage" in normalized:
+            checks += 1
+        else:
+            errors.append("OSN must include Object Storage when a DB tier is modeled")
+    return checks
+
+
 def validate_model_gateway_route_rules(
     model: dict[str, Any],
     errors: list[str],
@@ -660,6 +697,144 @@ def validate_model_gateway_route_rules(
         warnings.append("service-gateway is present but no OSN services are modeled")
 
     return checks
+
+
+def validate_model_public_subnet_rules(
+    model: dict[str, Any],
+    elements: dict[str, list[NamedElement]],
+    subnet_boxes: dict[str, NamedElement],
+    errors: list[str],
+) -> int:
+    checks = 0
+    resources = resource_by_id(model)
+    explicit_subnets = {
+        clean_string(resource.get("id")): clean_string(resource.get("subnet"))
+        for resource in model.get("resources") or []
+        if isinstance(resource, dict)
+    }
+    for subnet in ordered_subnets(model):
+        if not isinstance(subnet, dict) or subnet_kind(subnet) not in {"public", "edge", "dmz"}:
+            continue
+        subnet_name = clean_string(subnet.get("name")) or "Public Subnet"
+        subnet_resources: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for resource_id in subnet.get("resources") or []:
+            rid = clean_string(resource_id)
+            resource = resources.get(rid)
+            if resource:
+                subnet_resources.append(resource)
+                seen.add(rid)
+        for rid, subnet_value in explicit_subnets.items():
+            if rid in seen or subnet_value != subnet_name:
+                continue
+            resource = resources.get(rid)
+            if resource:
+                subnet_resources.append(resource)
+
+        subnet_box = subnet_boxes.get(subnet_name)
+        rendered_bastion = False
+        if subnet_box is not None:
+            rendered_bastion = any(
+                is_inside(item, subnet_box)
+                for item in elements.get("Icon Bastion", [])
+            )
+        if any(is_bastion_resource(resource) for resource in subnet_resources) or rendered_bastion:
+            checks += 1
+        else:
+            errors.append(f"{subnet_name} must include a Bastion resource")
+
+        for resource in subnet_resources:
+            if is_forbidden_public_subnet_workload(resource):
+                label = clean_string(resource.get("label")) or clean_string(resource.get("id"))
+                errors.append(
+                    f"{subnet_name} must not contain Web/App/DB/private workload resource: {label}"
+                )
+            else:
+                checks += 1
+    return checks
+
+
+def is_bastion_resource(resource: dict[str, Any]) -> bool:
+    text = resource_text(resource)
+    return "bastion" in text
+
+
+def is_forbidden_public_subnet_workload(resource: dict[str, Any]) -> bool:
+    if is_bastion_resource(resource):
+        return False
+    text = resource_text(resource)
+    compact = text.replace(" ", "").replace("-", "")
+    forbidden_compact = {
+        "app",
+        "appserver",
+        "application",
+        "autonomousdatabase",
+        "compute",
+        "containerengineforkubernetes",
+        "database",
+        "db",
+        "exadata",
+        "functions",
+        "heatwave",
+        "mysql",
+        "mysqldatabase",
+        "mysqlheatwave",
+        "oke",
+        "was",
+        "web",
+        "webserver",
+    }
+    if compact in forbidden_compact:
+        return True
+    return any(
+        term in text
+        for term in (
+            "app server",
+            "application server",
+            "autonomous database",
+            "container engine",
+            "database",
+            "db server",
+            "exadata",
+            "function",
+            "heatwave",
+            "mysql",
+            "private compute",
+            "web server",
+        )
+    )
+
+
+def model_has_database_resource(model: dict[str, Any]) -> bool:
+    for resource in model.get("resources") or []:
+        if isinstance(resource, dict) and is_database_resource_model_item(resource):
+            return True
+    return False
+
+
+def is_database_resource_model_item(resource: dict[str, Any]) -> bool:
+    text = resource_text(resource)
+    return any(
+        term in text
+        for term in (
+            "autonomous database",
+            "database",
+            "db",
+            "exadata",
+            "heatwave",
+            "mysql",
+            "nosql",
+        )
+    )
+
+
+def resource_text(resource: dict[str, Any]) -> str:
+    return normalize_lookup(
+        " ".join(
+            str(resource.get(field) or "")
+            for field in ("id", "type", "label", "icon_key", "placement")
+        )
+    )
 
 
 def collect_model_requirements(
@@ -1090,7 +1265,29 @@ def expected_osn_services(model: dict[str, Any]) -> list[Any]:
         rid = clean_string(resource.get("id"))
         if rid not in subnet_resource_ids and is_osn_resource(resource):
             services.append(resource)
-    return dedupe_services(services)
+    services = dedupe_services(services)
+    if not services:
+        return services
+    services = dedupe_services(
+        services
+        + [
+            {"id": "iam", "type": "iam", "label": "IAM", "icon_key": "iam"},
+            {"id": "audit", "type": "audit", "label": "Audit", "icon_key": "audit"},
+        ]
+        + (
+            [
+                {
+                    "id": "object-storage",
+                    "type": "object-storage",
+                    "label": "Object Storage",
+                    "icon_key": "object-storage",
+                }
+            ]
+            if model_has_database_resource(model)
+            else []
+        )
+    )
+    return services
 
 
 def dedupe_services(services: list[Any]) -> list[Any]:
@@ -1420,6 +1617,26 @@ def assert_size(
         return 1
     errors.append(
         f"{item.name} size mismatch: expected {expected_w:.2f}x{expected_h:.2f}in, "
+        f"found {item.box.w:.3f}x{item.box.h:.3f}in ({item.slide_part})"
+    )
+    return 0
+
+
+def assert_size_range(
+    item: NamedElement,
+    min_size: float,
+    max_size: float,
+    errors: list[str],
+) -> int:
+    if (
+        min_size - LAYOUT_TOLERANCE_IN <= item.box.w <= max_size + LAYOUT_TOLERANCE_IN
+        and min_size - LAYOUT_TOLERANCE_IN <= item.box.h <= max_size + LAYOUT_TOLERANCE_IN
+        and approx_equal(item.box.w, item.box.h)
+    ):
+        return 1
+    errors.append(
+        f"{item.name} size mismatch: expected square icon between "
+        f"{min_size:.2f} and {max_size:.2f}in, "
         f"found {item.box.w:.3f}x{item.box.h:.3f}in ({item.slide_part})"
     )
     return 0

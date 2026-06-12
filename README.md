@@ -8,11 +8,13 @@ Patch notes: https://cdh3063.github.io/oci-archgen-skills/patch-notes.html
 
 ![Generated OCI DR architecture PPTX preview](docs/assets/dr-remote-peering-3tier-dg.png)
 
+![Generated ODB@AWS Multi-AZ Active Data Guard PPTX preview](docs/assets/odb-aws-multi-az-adg.png)
+
 ## Included Skills
 
 ### `oci-arch-pptx`
 
-Creates editable `.pptx` OCI architecture diagrams from natural-language architecture requests or structured JSON models.
+Creates editable `.pptx` OCI and Oracle Database@AWS architecture diagrams from natural-language architecture requests or structured JSON models.
 
 Key capabilities:
 
@@ -20,6 +22,7 @@ Key capabilities:
 - OCI service architecture coverage backed by 160+ mapped OCI service icons.
 - OCI-style containers, subnet badges, gateway placement, and OSN handling.
 - Public/private LoadBalancer, redundant Web/App tiers, local or remote VCN peering, DataGuard, and service-gateway patterns.
+- Oracle Database@AWS topology guidance, including AWS Region/AZ placement, VPC, Transit Gateway, ODB Peering, OCI Child Site, OCI Parent Region, and Active Data Guard diagram patterns.
 - Editable PowerPoint output generated with deterministic OOXML.
 - Model-aware validation for layout, required text coverage, and package structure.
 
@@ -77,6 +80,14 @@ After installation, ask Codex to use the skill:
 Use $oci-arch-pptx to create an editable OCI HA architecture PPTX with WAF,
 redundant Web/App servers, public LoadBalancer, private App LoadBalancer,
 and DataGuard.
+```
+
+Oracle Database@AWS requests are also supported:
+
+```text
+Use $oci-arch-pptx to create an editable ODB@AWS architecture PPTX where
+ODB@AWS is deployed in multiple AWS Availability Zones, each VPC connects
+through Transit Gateway, and Exadata databases replicate with Active Data Guard.
 ```
 
 You can also render from a structured model:

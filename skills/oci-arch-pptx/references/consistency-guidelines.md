@@ -24,21 +24,29 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - Single-topology container names should keep the validator-recognized names: `Region boundary`, `VCN boundary`, `Subnet <n>`, `Oracle Service Network boundary`.
 - Multi-region or multi-VCN names must follow a stable suffix pattern, such as `Region boundary:<region_id>`, `VCN boundary:<vcn_id>`, and `Subnet boundary:<subnet_id>`. The validator must understand that pattern before the deck is delivered.
 - Do not rely on visible text alone for validation. The PPTX object names must also express the architecture role.
+- Visible architecture labels must be English even when slide 3/4 narrative content is Korean or another input language. Keep translated prose out of diagram labels and put it in notes/checkpoint slides.
 - Use one abbreviation system per deck. If labels use `P` and `S`, define them in the legend and do not mix them with unrelated `Primary`/`Standby` shorthand inside the diagram.
 
 ## Layout Consistency
 
 - The main diagram must make containment visually obvious: Region > VCN > Subnet > Service.
+- Architecture component labels must render at 11 pt by default. If the diagram is crowded, adjust container/icon placement or simplify visible labels rather than shrinking below 11 pt.
+- Use the standard service icon size by default, but reduce service icon size when otherwise icons or labels would overflow their subnet/container.
+- OCI Region and OCI parent region containers must use OCI grouping colors, not white or transparent fill.
 - In multi-region DR, each region must have its own visible Region boundary and VCN boundary. Do not make a single logical VCN model stand in for two rendered VCNs.
 - Place subnets in traffic order inside each VCN: Public/Edge, Security/Inspection when present, App/Private, Data/Private, Management.
+- Public Subnet must include Bastion and must not contain Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workloads.
+- If four or more subnet tiers make a single vertical stack crowded, use a 2 x N subnet layout when horizontal room is available instead of shrinking labels/icons into unreadability.
 - Place VCN-level gateways adjacent to the VCN they belong to. Do not place gateway icons so far outside the owning region or VCN that ownership is ambiguous.
 - Put service gateways and OSN only when Oracle public services are modeled. If Object Storage backup, DB backup, patching, or private Oracle service access is shown or mentioned, either show SGW/OSN or state why it is outside scope.
+- If OSN is modeled because the diagram has unused left/right whitespace, it must include `IAM` and `Audit`; if any DB tier is present, it must also include `Object Storage`.
 - Keep failover controls attached to the thing that performs failover. A floating `DR Failover` box is not enough; show DNS, Traffic Management, GSLB, runbook automation, or clearly mark the mechanism as out of scope.
 
 ## Connector Consistency
 
 - Read `references/connection-line-policy.md` before drawing connector lines.
-- Workload traffic must be arrows. Network circuits such as FastConnect, VPN, LPG, RPG, DRG peering, and Data Guard must be connector lines without arrowheads unless directionality is explicitly needed.
+- Do not draw ordinary workload traffic chains on the architecture slide. IGW/LB/Web/App/DB request paths belong in notes unless the user explicitly asks for traffic-flow visualization.
+- Relationship lines such as VCN Peering and Data Guard/DG/ADG must be connector lines without arrowheads unless directionality is explicitly needed.
 - Use PowerPoint connector geometry and attach connectors to source and target shapes whenever possible. Do not draw important relationships as detached coordinate-only line segments.
 - If endpoint attachment is technically impossible because an endpoint is a raster icon, add a named invisible anchor shape or document the fallback and verify the rendered line touches the intended object cleanly.
 - Do not overload dense diagrams with protocol labels. Put protocol, port, and NSG details in notes unless the label improves readability.
