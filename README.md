@@ -23,6 +23,7 @@ Key capabilities:
 - OCI-style containers, subnet badges, gateway placement, and OSN handling.
 - Public/private LoadBalancer, redundant Web/App tiers, local or remote VCN peering, DataGuard, and service-gateway patterns.
 - Oracle Database@AWS topology guidance, including AWS Region/AZ placement, VPC, Transit Gateway, ODB Peering, OCI Child Site, OCI Parent Region, and Active Data Guard diagram patterns.
+- Architecture-specific best-practice, operational, and implementation checkpoint slides, including DR runbook, RTO/RPO, failover/failback, security, monitoring, backup, and ownership considerations.
 - Editable PowerPoint output generated with deterministic OOXML.
 - Model-aware validation for layout, required text coverage, and package structure.
 
