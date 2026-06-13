@@ -73,7 +73,7 @@ Run full draw.io service PNG regeneration with:
 
 ```bash
 scripts/extract_drawio_icons.py --all-services --asset-format png --replace-existing
-qlmanage -t -s 512 -o skills/oci-arch-pptx/assets/extracted-icons skills/oci-arch-pptx/assets/extracted-icons/*.svg
+qlmanage -t -s 512 -o skills/oci-archgen-pptx/assets/extracted-icons skills/oci-archgen-pptx/assets/extracted-icons/*.svg
 scripts/finalize_drawio_png_icons.py
 ```
 

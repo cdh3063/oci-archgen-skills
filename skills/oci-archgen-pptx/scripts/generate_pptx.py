@@ -798,8 +798,8 @@ class PptxPackage:
             'xmlns:dcterms="http://purl.org/dc/terms/" '
             'xmlns:dcmitype="http://purl.org/dc/dcmitype/" '
             'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-            f"<dc:title>{safe_title}</dc:title><dc:creator>oci-arch-pptx</dc:creator>"
-            "<cp:lastModifiedBy>oci-arch-pptx</cp:lastModifiedBy>"
+            f"<dc:title>{safe_title}</dc:title><dc:creator>oci-archgen-pptx</dc:creator>"
+            "<cp:lastModifiedBy>oci-archgen-pptx</cp:lastModifiedBy>"
             '<dcterms:created xsi:type="dcterms:W3CDTF">1980-01-01T00:00:00Z</dcterms:created>'
             '<dcterms:modified xsi:type="dcterms:W3CDTF">1980-01-01T00:00:00Z</dcterms:modified>'
             "</cp:coreProperties>"
@@ -810,7 +810,7 @@ class PptxPackage:
             '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
             '<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" '
             'xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">'
-            "<Application>oci-arch-pptx</Application>"
+            "<Application>oci-archgen-pptx</Application>"
             "<PresentationFormat>On-screen Show (16:9)</PresentationFormat>"
             f"<Slides>{len(self.slides)}</Slides></Properties>"
         )

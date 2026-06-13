@@ -32,7 +32,7 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - The main diagram must make containment visually obvious: Region > VCN > Subnet > Service.
 - Architecture component labels must render at 11 pt by default. If the diagram is crowded, adjust container/icon placement or simplify visible labels rather than shrinking below 11 pt.
 - Use the standard service icon size by default, but reduce service icon size when otherwise icons or labels would overflow their subnet/container.
-- OCI Region and OCI parent region containers must use OCI grouping colors, not white or transparent fill.
+- OCI Region and OCI Parents containers must use OCI grouping colors, not white or transparent fill.
 - In multi-region DR, each region must have its own visible Region boundary and VCN boundary. Do not make a single logical VCN model stand in for two rendered VCNs.
 - Place subnets in traffic order inside each VCN: Public/Edge, Security/Inspection when present, App/Private, Data/Private, Management.
 - Public Subnet must include Bastion and must not contain Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workloads.

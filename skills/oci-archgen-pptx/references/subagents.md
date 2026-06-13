@@ -41,7 +41,7 @@ Use this flow for complex diagrams, renderer changes, or validation hardening:
    validator behavior, and any existing draft.
 4. Orchestrator integrates renderer output and validation findings.
 5. Orchestrator runs:
-   - `python3 skills/oci-arch-pptx/scripts/validate_pptx.py <pptx> --model <model>`
+   - `python3 skills/oci-archgen-pptx/scripts/validate_pptx.py <pptx> --model <model>`
    - `unzip -t <pptx>`
    - preview/render QA when available.
 

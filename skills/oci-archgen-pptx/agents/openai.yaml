@@ -1,0 +1,4 @@
+interface:
+  display_name: "OCI Arch PPTX"
+  short_description: "Create OCI architecture PPTX decks"
+  default_prompt: "Use $oci-archgen-pptx to turn this OCI architecture request into an editable PowerPoint diagram."

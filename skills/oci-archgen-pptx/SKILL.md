@@ -1,5 +1,5 @@
 ---
-name: oci-arch-pptx
+name: oci-archgen-pptx
 description: Create or edit Oracle Cloud Infrastructure architecture diagrams as editable PowerPoint PPTX decks from natural-language requests. Use when Codex is asked to turn Korean or English OCI architecture descriptions into PPTX architecture slides, choose OCI service icons from a PowerPoint icon toolkit, apply Oracle Well-Architected and networking best practices, produce customer-ready OCI diagrams, or review OCI PPTX architecture outputs for correctness.
 ---
 
@@ -94,7 +94,7 @@ Region
 ```
 
 - Draw Region as the outer boundary. Draw the VCN as the primary inner boundary.
-- Render Region containers with OCI grouping colors from `references/container-style-map.json`; do not use white or transparent fill for OCI Region or OCI parent region boundaries.
+- Render Region containers with OCI grouping colors from `references/container-style-map.json`; do not use white or transparent fill for OCI Region or OCI Parents boundaries.
 - When the model has top-level `vcns`, draw VCNs side by side. Use one Region boundary for same-region local peering and separate Region boundaries for cross-region remote peering.
 - Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, Web/Private, App/Private, Data/Private, Management. Use a single vertical stack up to three subnets; for four or more subnets, consider a 2 x N or VCN-internal grid unless the model explicitly sets `layout.subnet_columns`.
 - For four or more subnet tiers, or when vertical room is tight and horizontal room is available, use a 2 x N VCN-internal subnet layout instead of shrinking labels/icons into unreadability.
@@ -188,7 +188,7 @@ When finishing a diagram task, provide:
 - `references/drawio-icon-inventory.json`: generated draw.io library match and SVG extraction inventory.
 - `references/container-style-map.json`: generated OCI draw.io Physical Grouping style map for Region, AD, FD, VCN, and subnet containers.
 - `references/connection-line-policy.md`: connector line, elbow-routing, arrowhead, and label policy based on OCI toolkit sample slides 29 and 30.
-- `references/odb-aws-guidelines.md`: Oracle Database@AWS topology and rendering rules, including AWS multi-AZ child-site placement with one OCI parent region rendered using standard OCI Region styling.
+- `references/odb-aws-guidelines.md`: Oracle Database@AWS topology and rendering rules, including AWS multi-AZ child-site placement with one OCI Parents container rendered using standard OCI Region styling.
 - `references/subagents.md`: subagent workflow and role contracts.
 - `scripts/extract_oci_icons.py`: extracts image-based icon mappings from `assets/OCI_Icons.pptx`.
 - `scripts/extract_drawio_icons.py`: extracts selected or all service SVG assets from the local OCI draw.io `OCI Library.xml` and can register PNG fallback paths.
