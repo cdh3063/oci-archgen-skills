@@ -32,7 +32,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 - Keep labels short and consistent. Use expanded terms in notes when the diagram needs compact labels such as `IGW`, `NAT`, `DRG`, `SGW`, `OSN`, `LPG`, or `RPG`.
 - Keep architecture-facing labels in English for every deck, regardless of the user's input language. This includes deck title, diagram title, outer/container labels, subnet labels, resource labels, gateway labels, connector labels, and model-visible service labels.
-- Use Title Case for English diagram labels and model-visible labels. For example, use `VPC Subnet`, `ODB Network`, `AWS Data Center`, `OCI Child Site`, `OCI Parents`, and `OCI Control Plane`.
+- Use Title Case for English diagram labels and model-visible labels. For example, use `VPC Subnet`, `ODB Network`, `AWS Data Center`, `OCI Child Site`, `OCI Parents Region`, and `OCI Control Plane`.
 - Center-align primary outer-container labels at the top of the container unless a provider-specific guideline says otherwise.
 - When a small provider/service icon is used as a corner badge, place the icon tightly at the top-left corner and align the label next to it.
 - Do not place descriptive statements such as `single-AD based view`, `only major traffic shown`, or similar caveats inside the main diagram body.
@@ -70,8 +70,8 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 ## OCI Container Color
 
-- Render OCI Region and OCI Parents containers with OCI grouping colors from `container-style-map.json`; do not use white or transparent fill for OCI Region boundaries.
-- OCI Parents in ODB@AWS diagrams must visually match the OCI Region family, using a gray OCI grouping fill and `#9E9892` line color.
+- Render OCI Region and OCI Parents Region containers with OCI grouping colors from `container-style-map.json`; do not use white or transparent fill for OCI Region boundaries.
+- OCI Parents Region in ODB@AWS diagrams must visually match the OCI Region family, using a gray OCI grouping fill and `#9E9892` line color.
 - If the standard light OCI Region fill has insufficient contrast against the slide background, use a stronger OCI grouping gray from the same OCI container palette rather than leaving the region visually white.
 
 ## Connectors

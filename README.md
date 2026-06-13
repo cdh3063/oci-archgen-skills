@@ -12,7 +12,7 @@ Patch notes: https://cdh3063.github.io/oci-archgen-skills/patch-notes.html
 
 ![Generated OCI DR architecture PPTX preview](docs/assets/dr-remote-peering-3tier-dg.png)
 
-![Generated ODB@AWS Multi AZ DR Architecture PPTX preview](docs/assets/odb-aws-multi-az-dr-parents.png)
+![Generated ODB@AWS Multi AZ DR Architecture PPTX preview](docs/assets/odb-aws-multi-az-dr-parents-region.png)
 
 ## Included Skills
 
@@ -26,7 +26,7 @@ Key capabilities:
 - OCI service architecture coverage backed by 160+ mapped OCI service icons.
 - OCI-style containers, subnet badges, gateway placement, and OSN handling.
 - Public/private LoadBalancer, redundant Web/App tiers, local or remote VCN peering, DataGuard, and service-gateway patterns.
-- Oracle Database@AWS topology guidance, including AWS Region/AZ placement, VPC, Transit Gateway, ODB Peering, OCI Child Site, OCI Parents, and Active Data Guard diagram patterns.
+- Oracle Database@AWS topology guidance, including AWS Region/AZ placement, VPC, Transit Gateway, ODB Peering, OCI Child Site, OCI Parents Region, and Active Data Guard diagram patterns.
 - Architecture-specific best-practice, operational, and implementation checkpoint slides, including DR runbook, RTO/RPO, failover/failback, security, monitoring, backup, and ownership considerations.
 - Editable PowerPoint output generated with deterministic OOXML.
 - Model-aware validation for layout, required text coverage, and package structure.
