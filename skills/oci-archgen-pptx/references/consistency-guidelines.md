@@ -47,6 +47,7 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - Read `references/connection-line-policy.md` before drawing connector lines.
 - Do not draw ordinary workload traffic chains on the architecture slide. IGW/LB/Web/App/DB request paths belong in notes unless the user explicitly asks for traffic-flow visualization.
 - Relationship lines such as VCN Peering and Data Guard/DG/ADG must be connector lines without arrowheads unless directionality is explicitly needed.
+- ODB@AWS diagrams must keep the VPC-to-ODB Network `ODB Peering` connector and the ODB Network-to-AWS Data Center / OCI Child Site connector as separate visible relationships.
 - Use PowerPoint connector geometry and attach connectors to source and target shapes whenever possible. Do not draw important relationships as detached coordinate-only line segments.
 - If endpoint attachment is technically impossible because an endpoint is a raster icon, add a named invisible anchor shape or document the fallback and verify the rendered line touches the intended object cleanly.
 - Do not overload dense diagrams with protocol labels. Put protocol, port, and NSG details in notes unless the label improves readability.

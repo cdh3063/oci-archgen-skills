@@ -5,7 +5,7 @@ Use this policy when rendering or reviewing OCI architecture connector lines. It
 ## Visual Style
 
 - Use dark OCI connector color `#312D2A` at `1.0 pt`.
-- Use connector lines for architecture relationships only, such as Local/Remote Peering, ODB Peering, Data Guard, DG, ADG, and Active Data Guard.
+- Use connector lines for architecture relationships only, such as Local/Remote Peering, ODB Peering, ODB Network-to-AWS Data Center / OCI Child Site relationships, Data Guard, DG, ADG, and Active Data Guard.
 - Do not draw ordinary workload request chains such as `User -> IGW -> LB -> Web -> App -> DB`; put those traffic assumptions in notes.
 - Use no arrowhead for Peering and Data Guard relationship lines unless directionality is explicitly required.
 - Use dashed lines only for administrative, SSH/RDP, VPN, or explicitly non-primary paths.
