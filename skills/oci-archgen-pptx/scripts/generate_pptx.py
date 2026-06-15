@@ -93,6 +93,18 @@ GATEWAY_SHORT_LABELS = {
     "service-gateway": "SGW",
 }
 
+HYBRID_CONNECTION_COMPACT_TERMS = {
+    "dedicatedconnection",
+    "fastconnect",
+    "fastconnectconnection",
+    "fc",
+    "ipsec",
+    "ipsecvpn",
+    "privatecircuit",
+    "sitetositevpn",
+    "vpn",
+}
+
 TIER_ORDER = {
     "edge": 0,
     "dmz": 0,
@@ -112,9 +124,10 @@ TIER_ORDER = {
 
 STANDARD_ICON_SIZE = 0.56
 STANDARD_ICON_LABEL_SIZE = 11.0
-OSN_GAP = 0.45
+OSN_GAP = 0.26
 OSN_WIDTH = 1.08
-OSN_REGION_SIDE_PAD = 0.72
+OSN_WIDE_WIDTH = 1.92
+OSN_REGION_SIDE_PAD = 0.46
 CONNECTOR_COLOR = "312D2A"
 CONNECTOR_WIDTH_PT = 1.0
 CONNECTOR_LABEL_COLOR = "312D2A"
@@ -249,6 +262,16 @@ DEFAULT_CONTAINER_STYLES = {
         "line_width": 1.0,
         "dash": None,
         "preset": "rect",
+        "font_color": "312D2A",
+        "align": "center",
+    },
+    "external-network": {
+        "fill": "F5F4F2",
+        "line": "9E9892",
+        "line_width": 1.0,
+        "dash": None,
+        "preset": "roundRect",
+        "rounding_adj": 2000,
         "font_color": "312D2A",
         "align": "center",
     },
@@ -958,8 +981,12 @@ class Renderer:
             bold=True,
         )
 
-        region_box = Box(1.15, 0.74, 11.65, 6.0)
-        vcn_box = Box(2.18, 1.22, 8.95, 5.05)
+        if self._has_external_network_layout(model):
+            region_box = Box(3.00, 0.82, 9.60, 5.70)
+            vcn_box = Box(3.55, 1.22, 5.95, 5.05)
+        else:
+            region_box = Box(1.15, 0.74, 11.65, 6.0)
+            vcn_box = Box(2.18, 1.22, 8.95, 5.05)
         ad_labels = self._availability_domain_labels(model)
         osn_services = self._oracle_service_network_services(model)
 
@@ -991,7 +1018,11 @@ class Renderer:
             vcn_box = Box(ad_box.x + 0.7, ad_box.y + 0.55, ad_box.w - 1.4, ad_box.h - 0.84)
 
         if osn_services:
-            vcn_box = self._balanced_single_vcn_box_with_osn(region_box, vcn_box)
+            vcn_box = self._balanced_single_vcn_box_with_osn(
+                region_box,
+                vcn_box,
+                self._osn_width(osn_services),
+            )
 
         self._draw_container(
             slide,
@@ -1023,6 +1054,7 @@ class Renderer:
         self._draw_external_actors(slide, model, subnet_boxes, region_box, vcn_box)
         self._draw_gateways(slide, model, region_box, vcn_box, subnet_boxes, osn_box)
         self._draw_resources(slide, model, subnet_boxes, osn_box)
+        self._draw_hybrid_network_connections(slide, model)
         self._draw_peering_exceptions(slide, model)
         self._draw_data_guard_exceptions(slide, model)
         legend = self._diagram_footer_disclaimer(model)
@@ -1792,10 +1824,48 @@ class Renderer:
         region_box: Box,
         vcn_box: Box,
     ) -> None:
+        networks = self._external_networks(model)
+        network_box = None
+        if networks:
+            network_box = self._draw_external_network_container(
+                slide, model, networks, subnet_boxes, region_box, vcn_box
+            )
+            center_ys = self._external_network_center_ys(model, networks, network_box, subnet_boxes, vcn_box)
+            for index, network in enumerate(networks):
+                center_y = center_ys[index]
+                label = str(network.get("label") or network.get("type") or "On-Prem")
+                icon_key = str(network.get("icon_key") or network.get("type") or "customer-data-center")
+                icon_key = self._canonical_icon_key(icon_key) or icon_key
+                icon_box = Box(
+                    network_box.cx - STANDARD_ICON_SIZE / 2,
+                    center_y - STANDARD_ICON_SIZE / 2,
+                    STANDARD_ICON_SIZE,
+                    STANDARD_ICON_SIZE,
+                )
+                self._draw_icon(
+                    slide,
+                    icon_key,
+                    label,
+                    icon_box,
+                    label_width=max(network_box.w - 0.12, 0.82),
+                    label_size=STANDARD_ICON_LABEL_SIZE,
+                )
+                network_id = str(network.get("id") or normalize_lookup(label) or f"external-{index + 1}")
+                for alias in self._external_network_aliases(network, label, network_id):
+                    self.boxes[alias] = icon_box
+
         if self._needs_internet_actor(model):
             first_subnet = next(iter(subnet_boxes.values()), None)
-            center_y = first_subnet.cy if first_subnet else region_box.y + 1.1
-            user_box = Box(0.34, center_y - STANDARD_ICON_SIZE / 2, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
+            if network_box is not None:
+                user_box = Box(
+                    network_box.cx - STANDARD_ICON_SIZE / 2,
+                    max(region_box.y + 0.16, network_box.y - STANDARD_ICON_SIZE - 0.46),
+                    STANDARD_ICON_SIZE,
+                    STANDARD_ICON_SIZE,
+                )
+            else:
+                center_y = first_subnet.cy if first_subnet else region_box.y + 1.1
+                user_box = Box(0.34, center_y - STANDARD_ICON_SIZE / 2, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
             self._draw_icon(
                 slide,
                 "user",
@@ -1808,33 +1878,93 @@ class Renderer:
             self.boxes["users"] = user_box
             self.boxes["external"] = user_box
 
-        networks = self._external_networks(model)
-        if not networks:
-            return
-
-        gap = 0.68
-        anchor_y = self._external_network_anchor_y(model, subnet_boxes, vcn_box)
-        start_y = anchor_y - gap * (len(networks) - 1) / 2
-        for index, network in enumerate(networks):
-            center_y = min(max(start_y + index * gap, region_box.y + 0.95), region_box.bottom - 0.9)
-            label = str(network.get("label") or network.get("type") or "On-Prem")
-            icon_key = str(network.get("icon_key") or network.get("type") or "customer-data-center")
-            icon_key = self._canonical_icon_key(icon_key) or icon_key
-            icon_box = Box(0.34, center_y - STANDARD_ICON_SIZE / 2, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
-            self._draw_icon(
-                slide,
-                icon_key,
-                label,
-                icon_box,
-                label_width=1.12,
-                label_size=STANDARD_ICON_LABEL_SIZE,
-            )
-            network_id = str(network.get("id") or normalize_lookup(label) or f"external-{index + 1}")
-            for alias in self._external_network_aliases(network, label, network_id):
-                self.boxes[alias] = icon_box
-
     def _needs_internet_actor(self, model: dict[str, Any]) -> bool:
         return True
+
+    def _has_external_network_layout(self, model: dict[str, Any]) -> bool:
+        return bool(self._external_networks(model)) or any(
+            isinstance(connection, dict) and self._is_hybrid_connection(connection)
+            for connection in model.get("connections") or []
+        )
+
+    def _draw_external_network_container(
+        self,
+        slide: SlideBuilder,
+        model: dict[str, Any],
+        networks: list[dict[str, Any]],
+        subnet_boxes: dict[str, Box],
+        region_box: Box,
+        vcn_box: Box,
+    ) -> Box:
+        x = 0.75
+        w = min(max(region_box.x - x - 0.14, 1.02), 1.50)
+        h = max(2.85, 1.05 * len(networks) + 1.25)
+        anchor_y = self._external_network_anchor_y(model, subnet_boxes, vcn_box)
+        y = anchor_y - h / 2
+        min_y = region_box.y + 1.35
+        max_y = region_box.bottom - h - 0.28
+        y = min(max(y, min_y), max_y)
+        box = Box(x, y, w, h)
+        self._draw_container(
+            slide,
+            "external-network",
+            "External Network boundary",
+            box,
+            "On-Prem Network",
+            Box(box.x + 0.08, box.y + 0.09, box.w - 0.16, 0.34),
+            11.0,
+            bold=True,
+            align="ctr",
+        )
+        self.boxes["external-network"] = box
+        self.boxes["on-prem-network"] = box
+        return box
+
+    def _external_network_center_ys(
+        self,
+        model: dict[str, Any],
+        networks: list[dict[str, Any]],
+        network_box: Box,
+        subnet_boxes: dict[str, Box],
+        vcn_box: Box,
+    ) -> list[float]:
+        if not networks:
+            return []
+        min_y = network_box.y + 0.62
+        max_y = network_box.bottom - 0.88
+        anchor_y = min(max(self._external_network_anchor_y(model, subnet_boxes, vcn_box), min_y), max_y)
+        cpe_index = next(
+            (
+                index
+                for index, network in enumerate(networks)
+                if self._network_is_cpe(network)
+            ),
+            -1,
+        )
+        if cpe_index < 0:
+            first_center_y = min_y
+            last_center_y = max_y
+            step = (last_center_y - first_center_y) / max(len(networks) - 1, 1)
+            return [first_center_y + index * step for index in range(len(networks))]
+
+        step = 1.05
+        centers = [anchor_y + (index - cpe_index) * step for index in range(len(networks))]
+        overflow_top = min_y - min(centers)
+        if overflow_top > 0:
+            centers = [center + overflow_top for center in centers]
+        overflow_bottom = max(centers) - max_y
+        if overflow_bottom > 0:
+            centers = [center - overflow_bottom for center in centers]
+        return [min(max(center, min_y), max_y) for center in centers]
+
+    def _network_is_cpe(self, network: dict[str, Any]) -> bool:
+        values = {
+            normalize_lookup(network.get("id")),
+            normalize_lookup(network.get("type")),
+            normalize_lookup(network.get("icon_key")),
+            normalize_lookup(network.get("label")),
+        }
+        return any(value == "cpe" or "customer premises" in value for value in values)
 
     def _external_network_anchor_y(
         self,
@@ -1877,10 +2007,12 @@ class Renderer:
                 continue
             for endpoint in (flow.get("from") or flow.get("source"), flow.get("to") or flow.get("target")):
                 if self._is_external_endpoint(endpoint):
+                    if self._external_endpoint_is_declared(networks, endpoint):
+                        continue
                     self._append_external_network(
                         networks,
                         seen,
-                        {"id": "on-prem", "label": "On-Prem", "type": "customer-data-center"},
+                        self._network_from_external_endpoint(endpoint),
                     )
         return networks
 
@@ -1915,6 +2047,15 @@ class Renderer:
         label: str,
         network_id: str,
     ) -> set[str]:
+        normalized_type = normalize_lookup(network.get("type"))
+        normalized_icon = normalize_lookup(network.get("icon_key"))
+        cpe_sources = {
+            normalized_type,
+            normalized_icon,
+            normalize_lookup(label),
+            normalize_lookup(network_id),
+        }
+        is_cpe = any(value == "cpe" or "customer premises" in value for value in cpe_sources)
         aliases = {
             network_id,
             network_id.lower(),
@@ -1924,11 +2065,6 @@ class Renderer:
         for value in (
             network.get("type"),
             network.get("icon_key"),
-            "on-prem",
-            "onprem",
-            "on-premises",
-            "customer-dc",
-            "customer-data-center",
         ):
             normalized = normalize_lookup(value)
             if normalized:
@@ -1937,7 +2073,52 @@ class Renderer:
             if raw:
                 aliases.add(raw)
                 aliases.add(raw.lower())
+        if not is_cpe:
+            aliases.update(
+                {
+                    "on-prem",
+                    "onprem",
+                    "on-premises",
+                    "customer-dc",
+                    "customer-data-center",
+                }
+            )
         return {alias for alias in aliases if alias}
+
+    def _external_endpoint_is_declared(
+        self,
+        networks: list[dict[str, Any]],
+        endpoint: Any,
+    ) -> bool:
+        normalized = normalize_lookup(endpoint)
+        if not normalized:
+            return False
+        for network in networks:
+            label = str(network.get("label") or "")
+            network_id = str(network.get("id") or normalize_lookup(label) or "")
+            if normalized in {
+                normalize_lookup(alias)
+                for alias in self._external_network_aliases(network, label, network_id)
+            }:
+                return True
+        return False
+
+    def _network_from_external_endpoint(self, endpoint: Any) -> dict[str, str]:
+        endpoint_id = str(endpoint or "on-prem").strip() or "on-prem"
+        normalized = normalize_lookup(endpoint_id)
+        if normalized == "cpe":
+            return {
+                "id": endpoint_id,
+                "label": "CPE",
+                "type": "customer-premises-equipment",
+                "icon_key": "customer-premises-equipment-cpe",
+            }
+        return {
+            "id": endpoint_id,
+            "label": "On-Prem",
+            "type": "customer-data-center",
+            "icon_key": "customer-data-center",
+        }
 
     def _draw_oracle_service_network(
         self,
@@ -1946,12 +2127,13 @@ class Renderer:
         vcn_box: Box,
         services: list[dict[str, Any]],
     ) -> Box:
+        osn_width = self._osn_width(services)
         x = vcn_box.right + OSN_GAP
         available_width = region_box.right - x - OSN_REGION_SIDE_PAD
         if available_width < 0.82:
-            x = max(vcn_box.right + 0.32, region_box.right - OSN_WIDTH - 0.32)
+            x = max(vcn_box.right + 0.32, region_box.right - osn_width - 0.32)
             available_width = region_box.right - x - 0.32
-        box = Box(x, vcn_box.y, min(OSN_WIDTH, max(0.82, available_width)), vcn_box.h)
+        box = Box(x, vcn_box.y, min(osn_width, max(0.82, available_width)), vcn_box.h)
         self._draw_container(
             slide,
             "oracle-service-network",
@@ -1964,21 +2146,16 @@ class Renderer:
             align="ctr",
         )
 
-        icon_size = STANDARD_ICON_SIZE
-        first_center_y = box.y + 1.24
-        last_center_y = box.bottom - 1.35
-        step = (last_center_y - first_center_y) / max(len(services) - 1, 1)
-        for index, service in enumerate(services):
+        placements = self._osn_service_placements(box, services)
+        for service, icon_box, label_width in placements:
             icon_key = str(service.get("icon_key") or service.get("type") or "")
             label = str(service.get("label") or icon_key or "Service")
-            center_y = first_center_y + index * step
-            icon_box = Box(box.cx - icon_size / 2, center_y - icon_size / 2, icon_size, icon_size)
             self._draw_icon(
                 slide,
                 icon_key,
                 label,
                 icon_box,
-                label_width=box.w - 0.08,
+                label_width=label_width,
                 label_size=STANDARD_ICON_LABEL_SIZE,
             )
             service_id = str(service.get("id") or "")
@@ -1991,11 +2168,60 @@ class Renderer:
         self.boxes["osn"] = box
         return box
 
-    def _balanced_single_vcn_box_with_osn(self, region_box: Box, vcn_box: Box) -> Box:
-        available_width = region_box.w - (OSN_REGION_SIDE_PAD * 2) - OSN_GAP - OSN_WIDTH
-        min_vcn_width = min(vcn_box.w, max(vcn_box.w - 0.65, 7.8))
+    def _osn_width(self, services: list[dict[str, Any]]) -> float:
+        return OSN_WIDE_WIDTH if len(services) >= 5 else OSN_WIDTH
+
+    def _osn_service_placements(
+        self,
+        box: Box,
+        services: list[dict[str, Any]],
+    ) -> list[tuple[dict[str, Any], Box, float]]:
+        if len(services) < 5:
+            icon_size = STANDARD_ICON_SIZE
+            first_center_y = box.y + 1.24
+            last_center_y = box.bottom - 1.35
+            step = (last_center_y - first_center_y) / max(len(services) - 1, 1)
+            return [
+                (
+                    service,
+                    Box(
+                        box.cx - icon_size / 2,
+                        first_center_y + index * step - icon_size / 2,
+                        icon_size,
+                        icon_size,
+                    ),
+                    box.w - 0.08,
+                )
+                for index, service in enumerate(services)
+            ]
+
+        columns = 2
+        rows = int(math.ceil(len(services) / columns))
+        content = Box(box.x + 0.08, box.y + 0.58, box.w - 0.16, box.h - 0.82)
+        cell_w = content.w / columns
+        cell_h = content.h / rows
+        icon_size = min(0.42, max(0.34, min(cell_w * 0.48, cell_h - 0.50)))
+        placements: list[tuple[dict[str, Any], Box, float]] = []
+        for index, service in enumerate(services):
+            col = index % columns
+            row = index // columns
+            cell_x = content.x + col * cell_w
+            cell_y = content.y + row * cell_h
+            icon_box = Box(
+                cell_x + (cell_w - icon_size) / 2,
+                cell_y + max((cell_h - icon_size - 0.42) / 2, 0.04),
+                icon_size,
+                icon_size,
+            )
+            placements.append((service, icon_box, max(cell_w - 0.04, 0.72)))
+        return placements
+
+    def _balanced_single_vcn_box_with_osn(self, region_box: Box, vcn_box: Box, osn_width: float) -> Box:
+        available_width = region_box.w - (OSN_REGION_SIDE_PAD * 2) - OSN_GAP - osn_width
+        min_width = 5.35 if osn_width > OSN_WIDTH else max(vcn_box.w - 0.65, 7.8)
+        min_vcn_width = min(vcn_box.w, min_width)
         new_width = min(vcn_box.w, max(min_vcn_width, available_width))
-        total_width = new_width + OSN_GAP + OSN_WIDTH
+        total_width = new_width + OSN_GAP + osn_width
         new_x = region_box.x + (region_box.w - total_width) / 2
         gateway_clearance_x = region_box.x + 0.76
         return Box(max(new_x, gateway_clearance_x), vcn_box.y, new_width, vcn_box.h)
@@ -2359,6 +2585,10 @@ class Renderer:
             gateway_type = str(gateway.get("type") or "").lower()
             mapped_key = GATEWAY_ICON_KEYS.get(gateway_type, gateway_type)
             key = self._canonical_icon_key(mapped_key) or mapped_key
+            if self._is_connection_only_gateway(gateway_type, key):
+                full_label = str(gateway.get("label") or "FastConnect")
+                self.icon_notes.add(f"{full_label}: rendered as a hybrid connection label")
+                continue
             short_label = self._gateway_short_label(key, gateway_type, gateway)
             if key == "service-gateway" and osn_box is not None:
                 if peering_side == "right":
@@ -2396,6 +2626,8 @@ class Renderer:
                 if key in {"internet-gateway", "nat-gateway"}:
                     boundary_x = vcn_box.right if place_right else vcn_box.x
                     x = boundary_x - STANDARD_ICON_SIZE / 2
+                elif key == "dynamic-routing-gateway" and "external-network" in self.boxes:
+                    x = max(region_box.x + 0.10, vcn_box.x - STANDARD_ICON_SIZE - 0.12)
                 else:
                     x = vcn_box.right + 0.14 if place_right else vcn_box.x - 0.78
                 occupied = right_ys if place_right else left_ys
@@ -2407,7 +2639,12 @@ class Renderer:
                 )
                 occupied.append(y)
             icon_box = Box(x, y, STANDARD_ICON_SIZE, STANDARD_ICON_SIZE)
-            label_width = 0.62 if key == "service-gateway" else 1.05
+            label_width = 0.62 if key in {
+                "dynamic-routing-gateway",
+                "internet-gateway",
+                "nat-gateway",
+                "service-gateway",
+            } else 1.05
             self._draw_icon(
                 slide,
                 key,
@@ -2429,6 +2666,9 @@ class Renderer:
             full_label = str(gateway.get("label") or "")
             if full_label and full_label != short_label:
                 self.icon_notes.add(f"{short_label}: {full_label}")
+
+    def _is_connection_only_gateway(self, gateway_type: str, key: str) -> bool:
+        return gateway_type in {"fastconnect", "fast-connect"} or key == "backbone"
 
     def _gateway_short_label(
         self,
@@ -2499,7 +2739,11 @@ class Renderer:
                 subnet_box.w - 0.64,
                 max(subnet_box.h - 0.53, 0.45),
             )
-            columns = self._resource_grid_columns(len(expanded), content)
+            columns = self._resource_grid_columns(
+                len(expanded),
+                content,
+                compact_for_hybrid=self._has_external_network_layout(model),
+            )
             rows = int(math.ceil(len(expanded) / columns))
             cell_w = content.w / columns
             cell_h = content.h / rows
@@ -2522,7 +2766,7 @@ class Renderer:
                     key,
                     label,
                     icon_box,
-                    max(cell_w, 0.85),
+                    min(max(cell_w, 0.85), 1.80),
                     STANDARD_ICON_LABEL_SIZE,
                 )
 
@@ -2534,9 +2778,15 @@ class Renderer:
             for rid, boxes in resource_boxes_by_id.items():
                 self.boxes[rid] = self._union_boxes(boxes)
 
-    def _resource_grid_columns(self, item_count: int, content: Box) -> int:
+    def _resource_grid_columns(
+        self,
+        item_count: int,
+        content: Box,
+        compact_for_hybrid: bool = False,
+    ) -> int:
         max_by_width = max(1, int(content.w / 0.78))
-        columns = min(item_count, max_by_width, 5)
+        max_columns = 3 if compact_for_hybrid and item_count >= 4 else 5
+        columns = min(item_count, max_by_width, max_columns)
         while columns > 1:
             rows = int(math.ceil(item_count / columns))
             if rows == 1 or content.h / rows >= 0.62:
@@ -2708,6 +2958,249 @@ class Renderer:
 
     def _should_draw_flows(self, model: dict[str, Any]) -> bool:
         return False
+
+    def _draw_hybrid_network_connections(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        specs = self._hybrid_connection_specs(model)
+        pair_totals: dict[tuple[str, str], int] = {}
+        pair_indexes: dict[tuple[str, str], int] = {}
+        for source_id, target_id, _label, _dash in specs:
+            pair_key = tuple(sorted((normalize_lookup(source_id), normalize_lookup(target_id))))
+            pair_totals[pair_key] = pair_totals.get(pair_key, 0) + 1
+
+        for index, (source_id, target_id, label, dash) in enumerate(specs, start=1):
+            source = self._box_for_endpoint(source_id)
+            target = self._box_for_endpoint(target_id)
+            if not source or not target:
+                continue
+            pair_key = tuple(sorted((normalize_lookup(source_id), normalize_lookup(target_id))))
+            pair_index = pair_indexes.get(pair_key, 0)
+            pair_indexes[pair_key] = pair_index + 1
+            pair_total = pair_totals.get(pair_key, 1)
+            self._draw_hybrid_connection_line(
+                slide,
+                index,
+                source,
+                target,
+                label,
+                dash,
+                pair_index,
+                pair_total,
+            )
+
+    def _hybrid_connection_specs(self, model: dict[str, Any]) -> list[tuple[str, str, str, str | None]]:
+        direct_specs: list[tuple[str, str, str, str | None]] = []
+        virtual_links: dict[str, list[tuple[str, str, str | None]]] = {}
+
+        for connection in model.get("connections") or []:
+            if not isinstance(connection, dict) or not self._is_hybrid_connection(connection):
+                continue
+            source_id = str(connection.get("from") or connection.get("source") or "")
+            target_id = str(connection.get("to") or connection.get("target") or "")
+            if not source_id or not target_id:
+                continue
+            label = self._hybrid_connection_label(connection)
+            dash = "dash" if self._is_vpn_connection(connection) else None
+
+            source = self._box_for_endpoint(source_id)
+            target = self._box_for_endpoint(target_id)
+            if source and target:
+                direct_specs.append((source_id, target_id, label, dash))
+                continue
+
+            if source and self._is_hybrid_virtual_endpoint(target_id, model):
+                virtual_links.setdefault(normalize_lookup(target_id), []).append((source_id, label, dash))
+            elif target and self._is_hybrid_virtual_endpoint(source_id, model):
+                virtual_links.setdefault(normalize_lookup(source_id), []).append((target_id, label, dash))
+
+        for links in virtual_links.values():
+            for left_index, left in enumerate(links):
+                for right in links[left_index + 1 :]:
+                    left_id, left_label, left_dash = left
+                    right_id, right_label, right_dash = right
+                    if not (self._box_for_endpoint(left_id) and self._box_for_endpoint(right_id)):
+                        continue
+                    if self._endpoint_is_drg(left_id) == self._endpoint_is_drg(right_id):
+                        continue
+                    label = left_label if normalize_lookup(left_label) == normalize_lookup(right_label) else left_label
+                    dash = left_dash or right_dash
+                    if self._endpoint_is_drg(left_id):
+                        direct_specs.append((right_id, left_id, label, dash))
+                    else:
+                        direct_specs.append((left_id, right_id, label, dash))
+
+        if not direct_specs and self._has_gateway_type(model, {"fastconnect"}):
+            drg_id = self.gateway_ids_by_key.get("dynamic-routing-gateway") or "drg"
+            external = next(iter(self._external_networks(model)), None)
+            if external and self._box_for_endpoint(drg_id):
+                external_id = str(external.get("id") or normalize_lookup(external.get("label")) or "on-prem")
+                direct_specs.append((external_id, drg_id, "FastConnect", None))
+
+        return self._dedupe_hybrid_connection_specs(direct_specs)
+
+    def _dedupe_hybrid_connection_specs(
+        self,
+        specs: list[tuple[str, str, str, str | None]],
+    ) -> list[tuple[str, str, str, str | None]]:
+        result: list[tuple[str, str, str, str | None]] = []
+        seen: set[tuple[str, str, str]] = set()
+        for source_id, target_id, label, dash in specs:
+            endpoints = tuple(sorted((normalize_lookup(source_id), normalize_lookup(target_id))))
+            key = (endpoints[0], endpoints[1], normalize_lookup(label))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append((source_id, target_id, label, dash))
+        return sorted(result, key=lambda spec: self._hybrid_connection_sort_key(spec[2]))
+
+    def _hybrid_connection_sort_key(self, label: str) -> tuple[int, str]:
+        compact = normalize_lookup(label).replace(" ", "").replace("-", "")
+        if "fastconnect" in compact:
+            return (0, label)
+        if "vpn" in compact:
+            return (1, label)
+        return (2, label)
+
+    def _is_hybrid_connection(self, connection: dict[str, Any]) -> bool:
+        for value in (
+            connection.get("type"),
+            connection.get("kind"),
+            connection.get("label"),
+            connection.get("id"),
+        ):
+            normalized = normalize_lookup(value)
+            compact = normalized.replace(" ", "").replace("-", "")
+            if compact in HYBRID_CONNECTION_COMPACT_TERMS:
+                return True
+            if "site to site vpn" in normalized or "fastconnect" in compact:
+                return True
+        return False
+
+    def _is_vpn_connection(self, connection: dict[str, Any]) -> bool:
+        text = normalize_lookup(
+            " ".join(
+                str(connection.get(field) or "")
+                for field in ("type", "kind", "label", "id")
+            )
+        )
+        return "vpn" in text or "ipsec" in text
+
+    def _hybrid_connection_label(self, connection: dict[str, Any]) -> str:
+        label = str(connection.get("label") or "").strip()
+        if label:
+            return label
+        text = normalize_lookup(
+            " ".join(
+                str(connection.get(field) or "")
+                for field in ("type", "kind", "id")
+            )
+        )
+        compact = text.replace(" ", "").replace("-", "")
+        if "vpn" in compact or "ipsec" in compact:
+            return "Site-to-Site VPN"
+        if "fastconnect" in compact or compact == "fc":
+            return "FastConnect"
+        return "Hybrid Connection"
+
+    def _hybrid_display_label(self, label: str) -> str:
+        normalized = normalize_lookup(label)
+        compact = normalized.replace(" ", "").replace("-", "")
+        if "fastconnect" in compact:
+            return "Fast\nConnect"
+        if "vpn" in compact:
+            return "VPN"
+        return label
+
+    def _is_hybrid_virtual_endpoint(self, endpoint: str, model: dict[str, Any]) -> bool:
+        normalized = normalize_lookup(endpoint)
+        compact = normalized.replace(" ", "").replace("-", "")
+        if compact in {"backbone", "fc", "fastconnect"}:
+            return True
+        for gateway in (model.get("vcn") or {}).get("gateways") or []:
+            if not isinstance(gateway, dict):
+                continue
+            gateway_id = normalize_lookup(gateway.get("id"))
+            gateway_type = normalize_lookup(gateway.get("type")).replace(" ", "").replace("-", "")
+            if normalized == gateway_id and gateway_type in {"fastconnect", "fastconnectconnection"}:
+                return True
+        return False
+
+    def _endpoint_is_drg(self, endpoint: str) -> bool:
+        normalized = normalize_lookup(endpoint)
+        if normalized in {"drg", "dynamic routing gateway"}:
+            return True
+        box = self._box_for_endpoint(endpoint)
+        drg = self._box_for_endpoint("drg") or self._box_for_endpoint("dynamic-routing-gateway")
+        return bool(box and drg and box == drg)
+
+    def _draw_hybrid_connection_line(
+        self,
+        slide: SlideBuilder,
+        index: int,
+        source: Box,
+        target: Box,
+        label: str,
+        dash: str | None,
+        pair_index: int,
+        pair_total: int,
+    ) -> None:
+        drg = self._box_for_endpoint("drg") or self._box_for_endpoint("dynamic-routing-gateway") or target
+        lane_y = drg.cy
+        if pair_total > 1:
+            lane_y += (pair_index - (pair_total - 1) / 2) * 0.34
+        start_x = source.right
+        end_x = min(target.x, drg.x)
+        start = (start_x, lane_y)
+        end = (end_x, lane_y)
+        slide.add_arrow(
+            f"Hybrid connection {index}",
+            start,
+            end,
+            dash=dash,
+            arrow=False,
+        )
+        self._draw_hybrid_connection_label(slide, index, label, start, end)
+
+    def _draw_hybrid_connection_label(
+        self,
+        slide: SlideBuilder,
+        index: int,
+        label: str,
+        start: tuple[float, float],
+        end: tuple[float, float],
+    ) -> None:
+        display_label = self._hybrid_display_label(label)
+        label_w = self._hybrid_marker_label_width(display_label)
+        label_h = 0.36 if "\n" in display_label else 0.24
+        line_left = min(start[0], end[0])
+        line_right = max(start[0], end[0])
+        line_w = line_right - line_left
+        cx = (line_left + line_right) / 2
+        if "\n" in display_label:
+            x = line_right - label_w - 0.08
+        elif line_w < label_w + 0.38:
+            x = line_right - label_w * 0.78
+        else:
+            x = cx - label_w / 2
+        x = min(max(x, 0.12), SLIDE_W - label_w - 0.12)
+        y = start[1] - label_h - 0.04
+        slide.add_text(
+            f"Hybrid connection label {index}",
+            Box(x, y, label_w, label_h),
+            display_label,
+            size_pt=CONNECTOR_LABEL_SIZE,
+            color=CONNECTOR_LABEL_COLOR,
+            bold=True,
+            align="ctr",
+            valign="ctr",
+            margin=0.02,
+        )
+
+    def _hybrid_marker_label_width(self, label: str) -> float:
+        longest = max((line for line in label.splitlines()), key=len, default=label)
+        units = sum(1.6 if ord(char) > 127 else 1.0 for char in longest)
+        if "\n" in label:
+            return min(max(0.46 + units * 0.046, 0.78), 1.02)
+        return min(max(0.62 + units * 0.046, 0.78), 1.34)
 
     def _draw_peering_exceptions(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         drawn: set[tuple[str, str]] = set()
@@ -3181,6 +3674,12 @@ class Renderer:
             return "Public\nLoad Balancer"
         if normalized == "internal load balancer":
             return "Internal\nLoad Balancer"
+        if normalized == "object storage":
+            return "Object\nStorage"
+        if normalized == "cloud guard":
+            return "Cloud\nGuard"
+        if normalized == "vulnerability scanning":
+            return "Vulnerability\nScanning"
         mysql_match = re.match(r"(?i)^mysql\s+heat\s*wave\s*(.*)$", raw)
         if mysql_match:
             suffix = mysql_match.group(1).strip()

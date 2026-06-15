@@ -26,6 +26,10 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 - Exception: when the overall OCI diagram has substantial unused left/right whitespace, render OSN to use that space. OSN must include `IAM` and `Audit`; if any DB tier exists, include `Object Storage` as well.
 - For OCI diagrams, always keep Public Subnet limited to public entry and administration controls such as Public Load Balancer, WAF/API Gateway when requested, and Bastion. Always show Bastion in the Public Subnet.
 - Never place Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workload resources in a Public Subnet. Place them in private Web/App/Data subnets even when Web and App are separated.
+- When on-premises, customer data center, CPE, FastConnect, or Site-to-Site VPN connectivity is requested, render the customer network as a separate external network container to the left of the OCI Region. Use the same container treatment as the OCI Region family, keep On-Prem/CPE icons inside it, and do not leave loose external network icons floating beside the Region.
+- For hybrid/on-premises diagrams, preserve CPE-to-DRG connection-line visibility by compacting the OCI side before shrinking labels: reduce Region/VCN/OSN horizontal footprint and use dense subnet resource grids such as `3 x 2` or `2 x 3` when a subnet has many peer resources. Do not apply this compacting rule to ordinary OCI-only layouts.
+- For hybrid/on-premises diagrams, center the whole architecture group on the slide: external network container, CPE-to-DRG connection lines, OCI Region, VCN, and OSN. The visual center should not be calculated from the OCI Region alone.
+- Shrink-wrap the OCI Region around the actual VCN and OSN footprint in hybrid layouts. Leave only enough left padding for DRG/gateway placement and enough right padding for OSN readability; avoid broad empty Region space after the OSN.
 - Do not add decorative logos or badges that do not clarify ownership or topology.
 
 ## Labels And Text
@@ -39,6 +43,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 - Render architecture component labels at 11 pt by default, including container labels, subnet labels, service labels, and connector labels.
 - Do not reduce architecture component labels below 11 pt to force-fit a dense layout. Instead resize or reposition containers/icons, shorten the visible label, or move details to notes.
 - Keep font sizes readable and avoid text overlap. If a label cannot fit at 11 pt, shorten the label and move the detail to notes.
+- Render every diagram label as a transparent/no-fill text box. Do not use a white canvas behind connector labels, service labels, gateway labels, subnet labels, or container labels.
 - For common long service labels, insert intentional line breaks instead of allowing PowerPoint to split words mid-token. Preferred breaks include `Public` / `Load Balancer`, `Internal` / `Load Balancer`, and `MySQL` / `HeatWave N`.
 - Follow the user's input language only for narrative content on slides 3 and 4, such as assumptions, security notes, rendering notes, and operational/best-practice checkpoints. Do not localize the architecture labels on slides 1 and 2 unless the user explicitly overrides this policy.
 
@@ -65,6 +70,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 - Place OSN to the right of the VCN when there is enough horizontal room and it does not make the main topology cramped.
 - Use compact labels: `IAM`, `Audit`, and `Object Storage`.
+- When OSN has five or more services, first reduce icon spacing and internal padding, then use a compact readable `2 x N` grid. Widen the OSN only as much as needed for labels. Use intentional line breaks for long labels such as `Object Storage`, `Cloud Guard`, and `Vulnerability Scanning`.
 - If OSN is rendered, include a Service Gateway between the VCN and OSN.
 - If a database tier is present, include `Object Storage` for backup/export/private service access context unless the user explicitly says not to show storage services.
 
@@ -77,6 +83,9 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 ## Connectors
 
 - Use connector lines only for architecture relationship lines such as VCN Peering, ODB Peering, Data Guard, DG, ADG, and Active Data Guard. Do not draw workload traffic chains such as `User -> IGW -> LB -> Web -> App -> DB`; describe those paths in notes.
+- Treat FastConnect and Site-to-Site VPN as hybrid network relationship lines. Show CPE/on-premises and DRG as endpoint icons, draw separate CPE-to-DRG lines, and place only transparent `FastConnect`/`VPN` text labels on or immediately above the lines. Do not render separate FastConnect/VPN icons and do not render FastConnect as a VCN-side gateway icon overlapping DRG.
+- In hybrid layouts, place the DRG in the left gateway corridor between the OCI Region boundary and the VCN. Keep it close to the VCN without overlapping the VCN boundary, and keep the `DRG` label directly under the icon inside the Region.
+- Place the `User` icon and label near the external network container, usually centered above it with clear spacing from the container label. Do not leave it isolated on the far-left slide margin.
 - Keep connector labels close to the relevant line and centered on the line when practical.
 - Render connector labels at 11 pt when they are shown.
 - For hub icons such as Transit Gateway, align the hub center with the connected container centers when the intended connection is vertical or horizontal.

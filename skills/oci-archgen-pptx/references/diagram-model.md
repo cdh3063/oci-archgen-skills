@@ -148,9 +148,14 @@ Use this JSON-like contract as the intermediate representation before producing 
 - If a resource has an explicit `subnet`, that subnet assignment wins.
 - If `subnet` is absent, use `placement` when available, then infer placement from service `type`, `icon_key`, and `label`.
 - Draw Oracle Service Network only when `oracle_service_network.services`, `public_services`, or OSN-placement resources are present in the model. Use `OSN` as the visible container label to avoid awkward wrapping in narrow side containers.
+- When OSN includes five or more services, render OSN services in a compact readable `2 x N` grid rather than a cramped single column. Reduce internal OSN icon spacing and padding before increasing OSN width.
 - For whitespace-driven OSN placement, model the OSN services explicitly as `IAM`, `Audit`, and optionally `Object Storage` for DB architectures.
 - Use `external_networks` or `on_premises` for customer data centers, CPE, partner networks, and other non-OCI endpoints.
+- When `external_networks`, `on_premises`, FastConnect, or Site-to-Site VPN is modeled, expect a left-side external network container rendered with the OCI Region container style. Place On-Prem/CPE icons inside that container rather than as loose icons.
 - Use `connections` for Peering and Data Guard/DG/ADG relationship lines. Do not model ordinary workload request chains as slide connectors.
+- Use `connections` for hybrid network relationships such as FastConnect and Site-to-Site VPN. FastConnect may appear in `vcn.gateways` for text coverage, but it should render as a labeled CPE/on-premises-to-DRG relationship line, not as a VCN gateway icon overlapping DRG.
+- In hybrid/on-premises layouts, compact the OCI Region/VCN/OSN footprint when needed to preserve CPE-to-DRG line visibility. For dense peer resources in a subnet, prefer compact grids such as `3 x 2` or `2 x 3`. Apply this only to hybrid layouts, not ordinary OCI-only diagrams.
+- In hybrid/on-premises layouts, center the combined visual group across the slide, including external network, CPE-to-DRG lines, OCI Region, VCN, and OSN. The OCI Region should be shrink-wrapped around the VCN and OSN footprint instead of keeping broad unused space after OSN.
 
 ## PPTX Layout Contract
 
@@ -168,11 +173,16 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet.
 - Place LPG/RPG gateways on facing VCN edges near the private App tier when possible, keeping them visually separated from DB/Data Guard lines.
 - Place On-Prem/Customer Data Center/CPE outside the Region and connect it to DRG with a `connections` entry such as FastConnect or VPN.
+- For On-Prem/Customer Data Center/CPE, draw a customer network box to the left of the OCI Region using the same visual family as the Region container. Place CPE and customer data center icons inside the box and keep their labels contained and readable.
+- Place the `User` icon and label near the external network container, usually centered above it, with enough vertical spacing to avoid overlap with the external network label/boundary.
+- Place DRG in the left gateway corridor between the OCI Region boundary and VCN, with its label directly below it and contained inside the Region.
+- For FastConnect and Site-to-Site VPN dual connectivity, draw separate relationship lines between CPE/on-premises and DRG and place only transparent `FastConnect`/`VPN` text labels on or immediately above the lines. Do not add separate FastConnect/VPN icons or white label canvases. Use no arrowhead; use dashed line treatment for VPN/backup paths when shown. Keep DRG, CPE, FastConnect/VPN labels, and line paths from overlapping each other.
 - Public/edge subnets require an Internet Gateway. Private subnets should have NAT Gateway and/or Service Gateway when private egress or OCI public service access is modeled. OSN services require a Service Gateway.
 - Do not draw workload flow arrows on the architecture slide. Summarize ingress, LB/backend, web/app, app/DB, and egress assumptions in notes.
 - Use orthogonal elbow connectors with staggered offsets when multiple horizontal connector lines would overlap in the same corridor.
 - Use notes for security assumptions instead of overloading arrows with long text.
 - Render architecture component labels at 11 pt by default. Resize or reposition containers/icons instead of shrinking labels below 11 pt.
+- Render all architecture labels as transparent/no-fill text boxes. Do not use opaque white fill behind labels.
 - Use the standard service icon size by default, but reduce icon size when icons or labels would overflow their subnet/container. Containment and readability take priority over fixed icon size.
 - Default deck: title slide, architecture diagram slide, assumptions/best-practice notes slide, operational/best-practice checkpoint slide.
 - The title slide should follow the common rendering guideline for all generated decks.

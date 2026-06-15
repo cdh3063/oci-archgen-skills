@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 import zipfile
@@ -86,6 +87,18 @@ GATEWAY_ALIASES = {
     "service-gateway": ("Service Gateway", "SGW"),
     "drg": ("Dynamic Routing Gateway", "DRG"),
     "local-peering-gateway": ("Local Peering Gateway", "LPG"),
+}
+
+HYBRID_CONNECTION_COMPACT_TERMS = {
+    "dedicatedconnection",
+    "fastconnect",
+    "fastconnectconnection",
+    "fc",
+    "ipsec",
+    "ipsecvpn",
+    "privatecircuit",
+    "sitetositevpn",
+    "vpn",
 }
 
 Requirement = tuple[str, str, tuple[str, ...]]
@@ -253,6 +266,7 @@ def validate_model_layout_rules(
         model_subnet_boxes(model, elements),
         errors,
     )
+    checks += validate_model_hybrid_network_layout(model, elements, errors)
     return checks, errors, warnings
 
 
@@ -274,7 +288,9 @@ def validate_layout_rules(pptx_path: Path) -> tuple[int, list[str], list[str]]:
     checks += validate_standard_icon_sizes(elements, errors)
     checks += validate_oracle_service_network(elements, errors)
     checks += validate_icon_label_text(elements, errors)
+    checks += validate_label_text_box_fill(elements, errors)
     checks += validate_connector_labels(elements, errors)
+    checks += validate_hybrid_network_layout(elements, errors)
 
     return checks, errors, warnings
 
@@ -450,21 +466,26 @@ def validate_oracle_service_network(
     if not service_items:
         errors.append("Oracle Service Network must contain at least one service icon")
     else:
-        centers_y = [item.box.cy for item in service_items]
-        centers_x = [item.box.cx for item in service_items]
-        if len(set(round(y, 3) for y in centers_y)) == len(centers_y):
+        for left_index, left in enumerate(service_items):
+            for right in service_items[left_index + 1 :]:
+                if boxes_overlap(left.box, right.box):
+                    errors.append(f"{left.name} overlaps {right.name} in OSN")
+                else:
+                    checks += 1
+
+        centers_y = sorted({round(item.box.cy, 2) for item in service_items})
+        centers_x = sorted({round(item.box.cx, 2) for item in service_items})
+        if len(centers_x) == 1 and len(centers_y) == len(service_items):
+            checks += 1
+        elif len(centers_x) == 2 and len(centers_y) >= math.ceil(len(service_items) / 2):
             checks += 1
         else:
             errors.append(
-                "OSN service icons must use distinct vertical positions: "
-                + ", ".join(f"{item.name} y={item.box.cy:.3f}" for item in service_items)
-            )
-        if max(centers_x) - min(centers_x) <= LAYOUT_TOLERANCE_IN:
-            checks += 1
-        else:
-            errors.append(
-                "OSN service icons must be vertically aligned: "
-                + ", ".join(f"{item.name} x={item.box.cx:.3f}" for item in service_items)
+                "OSN service icons must use a readable 1-column or 2xN grid layout: "
+                + ", ".join(
+                    f"{item.name}=({item.box.cx:.3f},{item.box.cy:.3f})"
+                    for item in service_items
+                )
             )
 
     return checks
@@ -510,6 +531,32 @@ def validate_icon_label_text(
     return checks
 
 
+def validate_label_text_box_fill(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    for name, matches in elements.items():
+        if not is_diagram_label_shape_name(name):
+            continue
+        for item in matches:
+            fill = shape_fill_color(item)
+            if fill:
+                errors.append(f"{item.name} must use transparent/no-fill label background")
+            else:
+                checks += 1
+    return checks
+
+
+def is_diagram_label_shape_name(name: str) -> bool:
+    return (
+        name.startswith("Label ")
+        or name.startswith("Flow label ")
+        or name.startswith("Hybrid connection label ")
+        or name.endswith(" boundary label")
+        or re.fullmatch(r"Subnet \d+ label", name) is not None
+    )
+
+
 def validate_connector_labels(
     elements: dict[str, list[NamedElement]], errors: list[str]
 ) -> int:
@@ -526,17 +573,29 @@ def validate_connector_labels(
     connectors = [
         item
         for name, matches in elements.items()
-        if name.startswith("Flow ") and not name.startswith("Flow label ")
+        if (
+            (name.startswith("Flow ") and not name.startswith("Flow label "))
+            or (name.startswith("Hybrid connection ") and not name.startswith("Hybrid connection label "))
+        )
         for item in matches
     ]
     for label in labels:
-        suffix = label.name.removeprefix("Flow label ")
-        matching = [
-            connector
-            for connector in connectors
-            if connector.name == f"Flow {suffix}"
-            or connector.name.startswith(f"Flow {suffix} segment ")
-        ]
+        if label.name.startswith("Flow label "):
+            suffix = label.name.removeprefix("Flow label ")
+            matching = [
+                connector
+                for connector in connectors
+                if connector.name == f"Flow {suffix}"
+                or connector.name.startswith(f"Flow {suffix} segment ")
+            ]
+        else:
+            suffix = label.name.removeprefix("Hybrid connection label ")
+            matching = [
+                connector
+                for connector in connectors
+                if connector.name == f"Hybrid connection {suffix}"
+                or connector.name.startswith(f"Hybrid connection {suffix} segment ")
+            ]
         if not matching:
             continue
         inner_label = inset_box(label.box, 0.08, CONNECTOR_LABEL_OVERLAP_LIMIT_IN / 2)
@@ -547,6 +606,191 @@ def validate_connector_labels(
             )
         else:
             checks += 1
+    return checks
+
+
+def validate_hybrid_network_layout(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    checks += validate_drg_icon_not_overlapped(elements, errors)
+    checks += validate_hybrid_label_clearance(elements, errors)
+    checks += validate_no_hybrid_connection_icons(elements, errors)
+    checks += validate_hybrid_label_line_position(elements, errors)
+
+    external = first_element(elements, "External Network boundary")
+    if external is None:
+        return checks
+
+    region = first_element(elements, "Region boundary")
+    if region is None:
+        errors.append("External Network boundary exists but Region boundary is missing")
+    else:
+        if external.box.right <= region.box.x + LAYOUT_TOLERANCE_IN:
+            checks += 1
+        else:
+            errors.append(
+                "External Network boundary must sit outside and left of OCI Region: "
+                f"external right={external.box.right:.3f}, region x={region.box.x:.3f}"
+            )
+        checks += assert_matching_container_style(
+            external,
+            region,
+            "External Network boundary",
+            "Region boundary",
+            errors,
+        )
+
+    external_icons = [
+        item
+        for name, matches in elements.items()
+        if name.startswith("Icon ") and not name.startswith("Icon User")
+        for item in matches
+        if is_inside(item, external)
+    ]
+    if external_icons:
+        checks += len(external_icons)
+    else:
+        errors.append("External Network boundary must contain at least one network icon")
+    return checks
+
+
+def validate_no_hybrid_connection_icons(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    icons = [
+        item
+        for name, matches in elements.items()
+        if name.startswith("Hybrid connection icon ")
+        for item in matches
+    ]
+    if icons:
+        for icon in icons:
+            errors.append(f"{icon.name} must not be rendered; use line labels only")
+        return 0
+    return 1
+
+
+def validate_hybrid_label_line_position(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    labels = [
+        item
+        for name, matches in elements.items()
+        if name.startswith("Hybrid connection label ")
+        for item in matches
+    ]
+    for label in labels:
+        suffix = label.name.removeprefix("Hybrid connection label ")
+        connector = first_element(elements, f"Hybrid connection {suffix}")
+        if connector is None:
+            errors.append(f"{label.name} has no matching hybrid connection line")
+            continue
+        points = connector_line_points(connector)
+        if points is None:
+            errors.append(f"{connector.name} has no readable connector geometry")
+            continue
+        start, end = points
+        line_left = min(start[0], end[0])
+        line_right = max(start[0], end[0])
+        line_y = (start[1] + end[1]) / 2
+        label_gap = line_y - label.box.bottom
+        if label.box.cx < line_left - 0.08 or label.box.cx > line_right + 0.08:
+            errors.append(
+                f"{label.name} must be centered over its hybrid connection line: "
+                f"label cx={label.box.cx:.3f}, line x=({line_left:.3f},{line_right:.3f})"
+            )
+            continue
+        if label_gap < -LAYOUT_TOLERANCE_IN or label_gap > 0.10:
+            errors.append(
+                f"{label.name} must sit immediately above its hybrid connection line: "
+                f"gap={label_gap:.3f}"
+            )
+            continue
+        checks += 1
+    return checks
+
+
+def validate_hybrid_label_clearance(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    labels = [
+        item
+        for name, matches in elements.items()
+        if name.startswith("Hybrid connection label ")
+        for item in matches
+    ]
+    if not labels:
+        return checks
+    obstacles = [
+        item
+        for name, matches in elements.items()
+        if (
+            name.startswith("Icon ")
+            or (name.startswith("Label ") and not name.startswith("Label User"))
+            or re.fullmatch(r"Subnet \d+ label", name)
+        )
+        for item in matches
+    ]
+    for left_index, label in enumerate(labels):
+        for other in labels[left_index + 1 :]:
+            if boxes_overlap(label.box, other.box):
+                errors.append(f"{label.name} overlaps {other.name}")
+            else:
+                checks += 1
+        for obstacle in obstacles:
+            if boxes_overlap(label.box, obstacle.box):
+                errors.append(f"{label.name} overlaps {obstacle.name}")
+            else:
+                checks += 1
+    return checks
+
+
+def validate_drg_icon_not_overlapped(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    for drg in elements.get("Icon DRG", []):
+        for name, matches in elements.items():
+            if not name.startswith("Icon ") or name in {"Icon DRG", "Icon User"}:
+                continue
+            for item in matches:
+                if boxes_overlap(drg.box, item.box):
+                    errors.append(
+                        f"Icon DRG overlaps {item.name}: "
+                        f"DRG=({drg.box.x:.3f},{drg.box.y:.3f},"
+                        f"{drg.box.w:.3f},{drg.box.h:.3f}), "
+                        f"other=({item.box.x:.3f},{item.box.y:.3f},"
+                        f"{item.box.w:.3f},{item.box.h:.3f})"
+                    )
+                else:
+                    checks += 1
+    return checks
+
+
+def assert_matching_container_style(
+    item: NamedElement,
+    expected: NamedElement,
+    item_label: str,
+    expected_label: str,
+    errors: list[str],
+) -> int:
+    checks = 0
+    comparisons = [
+        ("fill", shape_fill_color(item), shape_fill_color(expected)),
+        ("line", shape_line_color(item), shape_line_color(expected)),
+        ("preset", shape_preset(item), shape_preset(expected)),
+    ]
+    for field, actual, wanted in comparisons:
+        if actual == wanted:
+            checks += 1
+        else:
+            errors.append(
+                f"{item_label} must match {expected_label} {field}: "
+                f"found {actual or '<none>'}, expected {wanted or '<none>'}"
+            )
     return checks
 
 
@@ -751,6 +995,66 @@ def validate_model_public_subnet_rules(
                 )
             else:
                 checks += 1
+    return checks
+
+
+def validate_model_hybrid_network_layout(
+    model: dict[str, Any],
+    elements: dict[str, list[NamedElement]],
+    errors: list[str],
+) -> int:
+    if not model_requires_hybrid_network(model):
+        return 1
+
+    checks = 0
+    external = first_element(elements, "External Network boundary")
+    if external is None:
+        errors.append(
+            "hybrid/on-premises models must render an External Network boundary "
+            "using the OCI Region container style"
+        )
+        return checks
+    checks += 1
+
+    expected_labels = expected_external_network_labels(model)
+    for label in expected_labels:
+        matches = elements.get(f"Icon {label}") or []
+        if not matches:
+            errors.append(f"external network icon was not rendered: {label}")
+            continue
+        for item in matches:
+            if is_inside(item, external):
+                checks += 1
+            else:
+                errors.append(
+                    f"external network icon must be inside External Network boundary: {label}"
+                )
+
+    gateway_types = model_gateway_types(model)
+    has_hybrid_path = model_has_hybrid_connection(model) or (
+        "dynamic-routing-gateway" in gateway_types and "fastconnect" in gateway_types
+    )
+    if has_hybrid_path:
+        hybrid_labels = [
+            item
+            for name, matches in elements.items()
+            if name.startswith("Hybrid connection label ")
+            for item in matches
+        ]
+        hybrid_connectors = [
+            item
+            for name, matches in elements.items()
+            if name.startswith("Hybrid connection ")
+            and not name.startswith("Hybrid connection label ")
+            for item in matches
+        ]
+        if hybrid_labels and hybrid_connectors:
+            checks += 1
+        else:
+            errors.append(
+                "FastConnect/VPN connections must be rendered as labeled hybrid "
+                "relationship lines between CPE/on-premises and DRG"
+            )
     return checks
 
 
@@ -1366,6 +1670,142 @@ def model_gateway_types(model: dict[str, Any]) -> set[str]:
     return result
 
 
+def model_requires_hybrid_network(model: dict[str, Any]) -> bool:
+    if expected_external_network_labels(model):
+        return True
+    if model_has_hybrid_connection(model):
+        return True
+    gateway_types = model_gateway_types(model)
+    return "dynamic-routing-gateway" in gateway_types and "fastconnect" in gateway_types
+
+
+def model_has_hybrid_connection(model: dict[str, Any]) -> bool:
+    return any(
+        isinstance(connection, dict) and is_hybrid_connection_model_item(connection)
+        for connection in model.get("connections") or []
+    )
+
+
+def is_hybrid_connection_model_item(connection: dict[str, Any]) -> bool:
+    for value in (
+        connection.get("type"),
+        connection.get("kind"),
+        connection.get("label"),
+        connection.get("id"),
+    ):
+        normalized = normalize_lookup(value)
+        compact = normalized.replace(" ", "").replace("-", "")
+        if compact in HYBRID_CONNECTION_COMPACT_TERMS:
+            return True
+        if "site to site vpn" in normalized or "fastconnect" in compact:
+            return True
+    return False
+
+
+def expected_external_network_labels(model: dict[str, Any]) -> list[str]:
+    labels: list[str] = []
+    aliases: set[str] = set()
+
+    external_networks = model.get("external_networks")
+    if isinstance(external_networks, dict):
+        external_networks = [external_networks]
+    elif not isinstance(external_networks, list):
+        external_networks = []
+    for network in external_networks:
+        label = external_network_label(network)
+        if label:
+            labels.append(label)
+        aliases.update(external_network_aliases_model(network, label))
+
+    on_premises = model.get("on_premises")
+    if isinstance(on_premises, dict):
+        label = external_network_label(on_premises)
+        if label:
+            labels.append(label)
+        aliases.update(external_network_aliases_model(on_premises, label))
+    elif isinstance(on_premises, list):
+        for network in on_premises:
+            label = external_network_label(network)
+            if label:
+                labels.append(label)
+            aliases.update(external_network_aliases_model(network, label))
+    elif on_premises is True:
+        labels.append("On-Prem")
+        aliases.add("on prem")
+
+    for resource in model.get("resources") or []:
+        if isinstance(resource, dict) and is_external_resource(resource):
+            label = external_network_label(resource)
+            if label:
+                labels.append(label)
+            aliases.update(external_network_aliases_model(resource, label))
+
+    for connection in model.get("connections") or []:
+        if not isinstance(connection, dict):
+            continue
+        for endpoint in (connection.get("from") or connection.get("source"), connection.get("to") or connection.get("target")):
+            if is_external_value(endpoint):
+                if normalize_lookup(endpoint) in aliases:
+                    continue
+                labels.append("CPE" if normalize_lookup(endpoint) == "cpe" else "On-Prem")
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for label in labels:
+        key = normalize_lookup(label)
+        if key and key not in seen:
+            seen.add(key)
+            result.append(label)
+    return result
+
+
+def external_network_aliases_model(network: Any, label: str) -> set[str]:
+    aliases = {normalize_lookup(label)}
+    if isinstance(network, str):
+        aliases.add(normalize_lookup(network))
+        return {alias for alias in aliases if alias}
+    if not isinstance(network, dict):
+        return {alias for alias in aliases if alias}
+    for key in ("id", "type", "icon_key"):
+        aliases.add(normalize_lookup(network.get(key)))
+    cpe_sources = {
+        normalize_lookup(network.get("id")),
+        normalize_lookup(network.get("type")),
+        normalize_lookup(network.get("icon_key")),
+        normalize_lookup(label),
+    }
+    is_cpe = any(value == "cpe" or "customer premises" in value for value in cpe_sources)
+    if not is_cpe:
+        aliases.update(
+            {
+                "customer data center",
+                "customer dc",
+                "on prem",
+                "on premises",
+                "onprem",
+            }
+        )
+    return {alias for alias in aliases if alias}
+
+
+def external_network_label(network: Any) -> str:
+    if isinstance(network, str):
+        normalized = normalize_lookup(network)
+        return "CPE" if normalized == "cpe" else network
+    if not isinstance(network, dict):
+        return ""
+    label = clean_string(network.get("label"))
+    if label:
+        return label
+    network_id = clean_string(network.get("id"))
+    if network_id:
+        return "CPE" if normalize_lookup(network_id) == "cpe" else network_id
+    network_type = normalize_lookup(network.get("type"))
+    if network_type == "cpe" or "customer premises" in network_type:
+        return "CPE"
+    return "On-Prem"
+
+
 def model_vcns(model: dict[str, Any]) -> list[dict[str, Any]]:
     vcns = model.get("vcns")
     if isinstance(vcns, list):
@@ -1585,6 +2025,24 @@ def element_name(element: ET.Element) -> str:
     if name_node is None:
         return ""
     return clean_string(name_node.attrib.get("name"))
+
+
+def shape_fill_color(item: NamedElement) -> str:
+    return first_shape_color(item.element, ".//p:spPr/a:solidFill/a:srgbClr")
+
+
+def shape_line_color(item: NamedElement) -> str:
+    return first_shape_color(item.element, ".//p:spPr/a:ln/a:solidFill/a:srgbClr")
+
+
+def shape_preset(item: NamedElement) -> str:
+    node = item.element.find(".//p:spPr/a:prstGeom", NS)
+    return clean_string(node.attrib.get("prst")) if node is not None else ""
+
+
+def first_shape_color(element: ET.Element, path: str) -> str:
+    node = element.find(path, NS)
+    return clean_string(node.attrib.get("val")).upper() if node is not None else ""
 
 
 def element_box(element: ET.Element) -> Box | None:

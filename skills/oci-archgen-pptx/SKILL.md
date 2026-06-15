@@ -52,6 +52,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Render every generated deck's title slide using the `assets/OCI_Icons.pptx` slide 1 title-page form: Oracle-branded white cover, Oracle logo placement, large architecture title, concise subtitle, and small bottom metadata. Do not make AWS or other non-OCI vendor branding the main cover signal even for multicloud diagrams.
    - Use layered slide structure: Region, Availability Domain or Fault Domain, VCN, Subnets, Gateways/Security, Workloads, Data, Annotations.
    - Use containment from outside to inside: Region > AD/FD if shown > VCN > subnet > resources.
+   - When on-premises IDC, customer data center, CPE, FastConnect, or VPN connectivity is requested, draw the external customer network as a left-side network container using the same OCI Region container visual treatment. Keep On-Prem/CPE icons inside that container.
    - Use `references/container-style-map.json` for OCI toolkit-derived container line, fill, dash, and label styling.
    - Read `references/connection-line-policy.md` when creating or modifying connector routing, line styling, or connector labels.
    - Put internet-facing entry resources and Bastion on the Edge/Public subnet, network firewall on Security/Inspection when present, private Web/App services on Web/App private subnets, database/data services on Data/Private, Oracle public services in OSN, and customer/on-prem endpoints outside the Region.
@@ -60,6 +61,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Label all subnets and tiers. Avoid connector labels on dense architecture slides unless the user explicitly asks for them; keep protocol or security-rule details in notes instead.
    - Always show the external actor as a `User` icon labeled `User`, not `Internet Users`.
    - Render architecture component labels at 11 pt by default. If 11 pt text does not fit, resize or reposition containers/icons, shorten the label, or move details to notes rather than reducing the architecture label font.
+   - Render all diagram label text boxes with transparent/no-fill backgrounds. Do not place white label canvases behind connector labels, service labels, gateway labels, subnet labels, or container labels.
    - Use the standard icon size by default, but reduce service icon size when icons or labels would overflow their subnet/container.
    - If a single-column subnet stack lacks vertical room and the VCN has horizontal room, use a 2 x N subnet layout instead of forcing all subnets into 1 x N.
    - Put a concise AI-output verification disclaimer in the architecture diagram slide footer, styled at 10 pt in red and left-aligned.
@@ -102,6 +104,7 @@ Region
 - Put Route Table and Security List icons tightly against each subnet container's upper-right corner without text labels.
 - Put an Oracle Service Network container to the right of the VCN with the same vertical size as the VCN when Oracle public services are represented. Label the container `OSN` to avoid narrow-box line wrapping.
 - Place the model's `oracle_service_network.services` or `public_services` icons vertically inside the Oracle Service Network. Do not draw Oracle Service Network services that are not present in the model.
+- When OSN has many services, use a compact readable `2 x N` service icon grid and reduce internal icon/label spacing before expanding the OSN width.
 - If the diagram has substantial unused left/right whitespace, render OSN even if it was not explicitly requested. Include `IAM` and `Audit` as baseline OSN services, and include `Object Storage` when a DB, MySQL HeatWave, Exadata, Autonomous Database, or other database tier is present.
 - When a resource has no explicit subnet, place API Gateway, Public LoadBalancer, Bastion, and WAF in Edge/Public; Network Firewall in Security/Inspection when available; Web servers in a private Web subnet; Compute, Functions, OKE, WAS, and app services in App/Private; Database, Exadata, MySQL, MySQL HeatWave, NoSQL, Data Flow, and Database Management in Data/Private; IAM, Audit, Object Storage, Logging, Monitoring, Vault, and related public services in Oracle Service Network.
 - Public Subnet must include Bastion and must not contain Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workload resources.
@@ -113,7 +116,14 @@ Region
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet instead of directly beside IGW.
 - For local VCN peering, place `LPG` gateways on facing VCN edges near the private App tier when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule and keep them visually separated from DB/Data Guard lines.
 - Put the external `User` actor outside the Region boundary and always render it with the `user` icon. Do not label it `Internet Users`. Place On-Prem, CPE, and Customer Data Center endpoints outside the Region only when requested.
+- For on-premises hybrid connectivity, place On-Prem, Customer Data Center, and CPE icons inside an external network container to the left of the OCI Region. The container should use the same visual family as the OCI Region boundary.
+- For hybrid/on-premises diagrams, center the combined visual group, including the external network container, CPE-to-DRG lines, OCI Region, VCN, and OSN. Do not center only the OCI Region while leaving the whole diagram left-heavy.
+- In hybrid/on-premises diagrams, place the `User` icon and label near the external network container, typically centered above it with clear vertical spacing. Do not leave the User icon isolated at the far-left slide edge or overlapping the external network boundary.
 - Keep gateway labels short (`IGW`, `NAT`, `DRG`, `SGW`) when space is tight, and expand the meaning in slide notes.
+- For hybrid/on-premises diagrams, place the DRG in the left gateway corridor between the OCI Region boundary and the VCN, close to but not overlapping the VCN. Keep the `DRG` label directly under the icon and inside the Region boundary.
+- For FastConnect and Site-to-Site VPN, use separate CPE-to-DRG relationship lines and put only the transparent `FastConnect`/`VPN` text labels on or immediately above the lines. Do not add FastConnect/VPN icons or white label canvases. Keep dual paths staggered, use dashed line treatment for VPN/backup paths, and never place a FastConnect gateway icon on top of the DRG icon.
+- When a hybrid network needs more line visibility, compact the OCI side first: reduce Region/VCN/OSN horizontal footprint and use compact subnet resource grids such as `3 x 2` or `2 x 3` for dense resources. Apply this space-saving behavior only for hybrid/on-premises connectivity layouts.
+- Shrink-wrap the OCI Region around the actual VCN and OSN footprint in hybrid layouts, with only enough left padding for DRG/gateway labels and enough right padding for OSN readability. Avoid large empty Region space after the OSN.
 - Keep arrows sparse: show only the primary ingress path, admin path through bastion, private app-to-data path, and private egress/service-access path when relevant. If these lines reduce readability, omit connection lines from the diagram slide and keep flow details in notes.
 - Render only architecture relationship lines such as VCN Peering and Data Guard/DG/ADG on the architecture slide. Do not draw workload chain lines such as `User -> IGW -> LB -> Web -> App -> DB`; summarize those traffic paths in notes instead.
 - When Data Guard is modeled, keep DB-to-DB `Data Guard`, `DG`, `ADG`, or `Active Data Guard` as a straight labeled connection line.
