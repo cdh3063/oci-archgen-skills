@@ -1073,7 +1073,7 @@ class Renderer:
         self.gateway_ids_by_key = {}
 
         title = str(model.get("title") or "OCI Architecture")
-        vcns = self._model_vcns(model)[:2]
+        vcns = self._model_vcns(model)
         same_region = self._same_region(vcns, model)
 
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "FFFFFF", None)
@@ -1089,7 +1089,7 @@ class Renderer:
         osn_services = self._oracle_service_network_services(model)
         shared_osn_box = None
 
-        if same_region:
+        if same_region and len(vcns) <= 2:
             if osn_services:
                 region_box = Box(0.55, 0.72, 12.25, 6.02)
                 vcn_boxes = [
@@ -1124,6 +1124,21 @@ class Renderer:
                     vcn_boxes[-1],
                     osn_services,
                 )
+        elif same_region:
+            has_external = self._has_external_network_layout(model)
+            region_box = Box(3.18, 0.74, 9.46, 6.0) if has_external else Box(0.72, 0.74, 11.95, 6.0)
+            self._draw_container(
+                slide,
+                "region",
+                "Region boundary",
+                region_box,
+                f"OCI Region: {self._region_display_label(self._vcn_region(vcns[0], model))}",
+                Box(region_box.x + 0.18, region_box.y + 0.08, region_box.w - 0.36, 0.34),
+                11.0,
+                bold=True,
+                align="ctr",
+            )
+            layouts = self._same_region_multi_vcn_layouts(region_box, vcns)
         else:
             region_boxes = [
                 Box(0.75, 0.74, 5.75, 6.0),
@@ -1150,6 +1165,9 @@ class Renderer:
                 layouts.append((vcn, region_box, vcn_boxes[index], "right" if index == 0 else "left"))
 
         all_subnet_boxes: dict[str, Box] = {}
+        rendered_layouts: list[
+            tuple[dict[str, Any], Box, Box, dict[str, Box], Box | None, str | None]
+        ] = []
         subnet_index = 1
         for vcn, region_box, vcn_box, peering_side in layouts:
             self._draw_container(
@@ -1169,6 +1187,7 @@ class Renderer:
                 "VCN badge",
                 Box(vcn_box.right - 0.15, vcn_box.y - 0.15, 0.3, 0.3),
             )
+            self._register_vcn_box(vcn, vcn_box)
 
             vcn_model = dict(model)
             vcn_model["vcn"] = vcn
@@ -1177,6 +1196,16 @@ class Renderer:
             subnet_boxes = self._draw_subnets(slide, vcn_model, vcn_box, start_index=subnet_index)
             subnet_index += len(self._ordered_subnets(vcn_model))
             all_subnet_boxes.update(subnet_boxes)
+            rendered_layouts.append((vcn_model, region_box, vcn_box, subnet_boxes, osn_box, peering_side))
+
+        if self._external_networks(model):
+            reference_region = rendered_layouts[0][1] if rendered_layouts else Box(2.85, 0.74, 9.85, 6.0)
+            reference_vcn = rendered_layouts[0][2] if rendered_layouts else Box(3.35, 1.22, 4.3, 2.35)
+            self._draw_external_actors(slide, model, all_subnet_boxes, reference_region, reference_vcn)
+        else:
+            self._draw_multi_vcn_internet_actor(slide, model, all_subnet_boxes)
+
+        for vcn_model, region_box, vcn_box, subnet_boxes, osn_box, peering_side in rendered_layouts:
             self._draw_gateways(
                 slide,
                 vcn_model,
@@ -1188,8 +1217,9 @@ class Renderer:
             )
             self._draw_resources(slide, vcn_model, subnet_boxes, osn_box)
 
-        self._draw_multi_vcn_internet_actor(slide, model, all_subnet_boxes)
+        self._draw_hybrid_network_connections(slide, model)
         self._draw_peering_exceptions(slide, model)
+        self._draw_transit_routing_exceptions(slide, model)
 
         self._draw_data_guard_exceptions(slide, model)
         legend = self._diagram_footer_disclaimer(model)
@@ -1205,6 +1235,47 @@ class Renderer:
 
     def _multi_vcn_layout_requested(self, model: dict[str, Any]) -> bool:
         return len(self._model_vcns(model)) >= 2
+
+    def _same_region_multi_vcn_layouts(
+        self,
+        region_box: Box,
+        vcns: list[dict[str, Any]],
+    ) -> list[tuple[dict[str, Any], Box, Box, str]]:
+        columns = 2 if len(vcns) <= 4 else 3
+        rows = int(math.ceil(len(vcns) / columns))
+        gap_x = 0.28
+        gap_y = 0.30
+        left = region_box.x + 0.45
+        top = region_box.y + 0.55
+        usable_w = region_box.w - 0.90
+        usable_h = region_box.h - 0.88
+        vcn_w = (usable_w - gap_x * (columns - 1)) / columns
+        vcn_h = (usable_h - gap_y * (rows - 1)) / rows
+
+        layouts: list[tuple[dict[str, Any], Box, Box, str]] = []
+        for index, vcn in enumerate(vcns):
+            row = index // columns
+            col = index % columns
+            box = Box(
+                left + col * (vcn_w + gap_x),
+                top + row * (vcn_h + gap_y),
+                vcn_w,
+                vcn_h,
+            )
+            peering_side = "right" if col == 0 else "left"
+            layouts.append((vcn, region_box, box, peering_side))
+        return layouts
+
+    def _register_vcn_box(self, vcn: dict[str, Any], vcn_box: Box) -> None:
+        aliases = {
+            str(vcn.get("id") or ""),
+            str(vcn.get("name") or ""),
+            normalize_lookup(vcn.get("id")),
+            normalize_lookup(vcn.get("name")),
+        }
+        for alias in aliases:
+            if alias:
+                self.boxes[alias] = vcn_box
 
     def _model_vcns(self, model: dict[str, Any]) -> list[dict[str, Any]]:
         vcns = model.get("vcns")
@@ -3236,8 +3307,10 @@ class Renderer:
         elif line_w < label_w + 0.38:
             x = line_right - label_w * 0.78
         else:
-            x = cx - label_w / 2
-        x = min(max(x, 0.12), SLIDE_W - label_w - 0.12)
+            x = line_right - label_w - 0.08
+        external = self._box_for_endpoint("external-network") or self._box_for_endpoint("on-prem-network")
+        min_x = external.right + 0.10 if external else 0.12
+        x = min(max(x, min_x), SLIDE_W - label_w - 0.12)
         y = start[1] - label_h - 0.04
         slide.add_text(
             f"Hybrid connection label {index}",
@@ -3280,6 +3353,69 @@ class Renderer:
                 end,
                 arrow=False,
             )
+
+    def _draw_transit_routing_exceptions(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        transit_links: list[tuple[str, str, str, tuple[float, float], tuple[float, float]]] = []
+        drawn: set[tuple[str, str]] = set()
+        for connection in list(model.get("connections") or []):
+            if not isinstance(connection, dict) or not self._is_transit_connection(connection):
+                continue
+            source_id = str(connection.get("from") or connection.get("source") or "")
+            target_id = str(connection.get("to") or connection.get("target") or "")
+            source = self._box_for_endpoint(source_id)
+            target = self._box_for_endpoint(target_id)
+            if not source or not target:
+                continue
+            key = tuple(sorted((normalize_lookup(source_id), normalize_lookup(target_id))))
+            if key in drawn:
+                continue
+            drawn.add(key)
+            label = str(connection.get("label") or "DRG Transit")
+            start, end = self._edge_points(source, target)
+            transit_links.append((source_id, target_id, label, start, end))
+            slide.add_arrow(
+                f"Transit connection {source_id} to {target_id}",
+                start,
+                end,
+                arrow=False,
+            )
+
+        if not transit_links:
+            return
+        source_id, target_id, label, start, end = transit_links[0]
+        display_label = self._transit_label(label)
+        slide.add_text(
+            f"Transit label {source_id} to {target_id}",
+            self._flow_label_box(start, end, display_label),
+            display_label,
+            size_pt=CONNECTOR_LABEL_SIZE,
+            color=CONNECTOR_LABEL_COLOR,
+            bold=True,
+            align="ctr",
+            valign="ctr",
+            fill=CONNECTOR_LABEL_FILL,
+            margin=0.02,
+        )
+
+    def _is_transit_connection(self, connection: dict[str, Any]) -> bool:
+        for value in (
+            connection.get("type"),
+            connection.get("kind"),
+            connection.get("label"),
+            connection.get("id"),
+        ):
+            normalized = normalize_lookup(value)
+            compact = normalized.replace(" ", "").replace("-", "")
+            if any(term in compact for term in ("transit", "drgattachment", "drgroute")):
+                return True
+        return False
+
+    def _transit_label(self, label: str) -> str:
+        normalized = normalize_lookup(label)
+        compact = normalized.replace(" ", "").replace("-", "")
+        if "drg" in compact or "transit" in compact:
+            return "DRG Transit"
+        return label
 
     def _is_peering_connection(self, connection: dict[str, Any]) -> bool:
         values = [
