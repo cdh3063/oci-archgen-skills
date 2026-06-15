@@ -64,7 +64,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Render architecture component labels at 11 pt by default. If 11 pt text does not fit, resize or reposition containers/icons, shorten the label, or move details to notes rather than reducing the architecture label font.
    - Render all diagram label text boxes with transparent/no-fill backgrounds. Do not place white label canvases behind connector labels, service labels, gateway labels, subnet labels, or container labels.
    - Use the standard icon size by default, but reduce service icon size when icons or labels would overflow their subnet/container.
-   - If a single-column subnet stack lacks vertical room and the VCN has horizontal room, use a 2 x N subnet layout instead of forcing all subnets into 1 x N.
+   - Default subnet layout is a single-column `1 x N` vertical stack through four subnet tiers, including `1 x 4`. Use a `2 x N` subnet layout only when the single-column stack lacks usable vertical room and the VCN has horizontal room.
    - Put a concise AI-output verification disclaimer in the architecture diagram slide footer, styled at 10 pt in red and left-aligned.
    - Keep architecture labels in English even when the user writes in Korean. Render slides 3 and 4 narrative content in the user's input language unless they request a different language.
    - Keep all icons, labels, containers, arrows, and notes editable in PowerPoint whenever practical.
@@ -99,8 +99,8 @@ Region
 - Draw Region as the outer boundary. Draw the VCN as the primary inner boundary.
 - Render Region containers with OCI grouping colors from `references/container-style-map.json`; do not use white or transparent fill for OCI Region or OCI Parents Region boundaries.
 - When the model has top-level `vcns`, draw VCNs side by side. Use one Region boundary for same-region local peering and separate Region boundaries for cross-region remote peering.
-- Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, Web/Private, App/Private, Data/Private, Management. Use a single vertical stack up to three subnets; for four or more subnets, consider a 2 x N or VCN-internal grid unless the model explicitly sets `layout.subnet_columns`.
-- For four or more subnet tiers, or when vertical room is tight and horizontal room is available, use a 2 x N VCN-internal subnet layout instead of shrinking labels/icons into unreadability.
+- Place subnets inside the VCN in traffic order: Edge/Public, Security/Inspection, Web/Private, App/Private, Data/Private, Management. Use a single vertical stack by default through four subnets, including `1 x 4`, unless the model explicitly sets `layout.subnet_columns`.
+- For five or more subnet tiers, or when a four-subnet `1 x 4` stack lacks usable vertical room and horizontal room is available, use a `2 x N` VCN-internal subnet layout instead of shrinking labels/icons into unreadability.
 - Put the VCN icon centered on the VCN container's upper-right vertex without a text label.
 - Put Route Table and Security List icons tightly against each subnet container's upper-right corner without text labels.
 - Use short role-based subnet labels in the diagram: `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Keep region names, CIDRs, and expanded type/tier details in model fields or notes, not in the visible subnet header.

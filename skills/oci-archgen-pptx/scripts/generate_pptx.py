@@ -1746,7 +1746,7 @@ class Renderer:
     ) -> dict[str, Box]:
         subnets = self._ordered_subnets(model)
         count = max(len(subnets), 1)
-        columns = self._subnet_layout_columns(model, count)
+        columns = self._subnet_layout_columns(model, count, vcn_box)
         rows = int(math.ceil(count / columns))
         top = vcn_box.y + 0.6
         gap_y = 0.2
@@ -1831,7 +1831,12 @@ class Renderer:
             return f"Private-{role}" if role else "Private"
         return name
 
-    def _subnet_layout_columns(self, model: dict[str, Any], subnet_count: int) -> int:
+    def _subnet_layout_columns(
+        self,
+        model: dict[str, Any],
+        subnet_count: int,
+        vcn_box: Box | None = None,
+    ) -> int:
         layout = model.get("layout") or {}
         requested = layout.get("subnet_columns") if isinstance(layout, dict) else None
         try:
@@ -1842,7 +1847,11 @@ class Renderer:
         if subnet_count <= 3:
             return 1
         if subnet_count == 4:
-            return 2
+            if vcn_box is not None:
+                single_stack_height = (vcn_box.h - 0.85 - 0.2 * (subnet_count - 1)) / subnet_count
+                if single_stack_height < 0.82:
+                    return 2
+            return 1
         return min(max(int(math.ceil(subnet_count / 4)), 2), 4)
 
     def _draw_subnet_badges(self, slide: SlideBuilder, box: Box, index: int) -> None:

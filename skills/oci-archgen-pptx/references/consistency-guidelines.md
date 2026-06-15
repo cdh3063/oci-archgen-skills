@@ -36,7 +36,7 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - In multi-region DR, each region must have its own visible Region boundary and VCN boundary. Do not make a single logical VCN model stand in for two rendered VCNs.
 - Place subnets in traffic order inside each VCN: Public/Edge, Security/Inspection when present, App/Private, Data/Private, Management.
 - Public Subnet must include Bastion and must not contain Web, App, DB, MySQL, Exadata, Autonomous Database, OKE, Functions, or private compute workloads.
-- If four or more subnet tiers make a single vertical stack crowded, use a 2 x N subnet layout when horizontal room is available instead of shrinking labels/icons into unreadability.
+- Use a single-column `1 x N` subnet stack by default through four subnet tiers, including `1 x 4`. Use a `2 x N` subnet layout only when that stack is crowded and horizontal room is available instead of shrinking labels/icons into unreadability.
 - Place VCN-level gateways adjacent to the VCN they belong to. Do not place gateway icons so far outside the owning region or VCN that ownership is ambiguous.
 - Put service gateways and OSN only when Oracle public services are modeled. If Object Storage backup, DB backup, patching, or private Oracle service access is shown or mentioned, either show SGW/OSN or state why it is outside scope.
 - If OSN is modeled because the diagram has unused left/right whitespace, it must include `IAM` and `Audit`; if any DB tier is present, it must also include `Object Storage`.
