@@ -1221,9 +1221,70 @@ def collect_subnet_requirements(
         if name in subnet_names:
             errors.append(f"duplicate subnet name in model: {name}")
         subnet_names.add(name)
-        add_requirement(requirements, "subnet", f"vcn.subnets[{index}].name", name)
+        add_requirement(
+            requirements,
+            "subnet",
+            f"vcn.subnets[{index}].name",
+            name,
+            compact_subnet_display_label(subnet),
+        )
 
     return subnet_names
+
+
+def compact_subnet_display_label(subnet: dict[str, Any]) -> str:
+    explicit = clean_string(subnet.get("display_name")) or clean_string(subnet.get("display_label"))
+    if explicit:
+        return explicit
+
+    name = clean_string(subnet.get("name"))
+    subnet_type = normalize_lookup(subnet.get("type"))
+    tier = normalize_lookup(subnet.get("tier"))
+    text = normalize_lookup(" ".join(str(subnet.get(key) or "") for key in ("name", "type", "tier")))
+
+    if subnet_type in {"public", "edge", "dmz"} or any(
+        term in text for term in ("public", "edge", "dmz")
+    ):
+        return "Public"
+    if tier in {"security", "inspection", "firewall"} or any(
+        term in text for term in ("security", "inspection", "firewall")
+    ):
+        return "Security"
+
+    role = compact_private_subnet_role(tier, text)
+    if subnet_type == "private" or "private" in text or role:
+        return f"Private-{role}" if role else "Private"
+    return shortened_subnet_name(name)
+
+
+def compact_private_subnet_role(tier: str, text: str) -> str:
+    padded = f" {text} "
+    if tier == "web" or " web " in padded:
+        return "Web"
+    if tier in {"db", "database", "data"} or any(
+        term in padded for term in (" database ", " db ", " data ")
+    ):
+        return "DB"
+    if tier in {"app", "application", "private", "workload"} or any(
+        term in padded for term in (" app ", " application ", " workload ")
+    ):
+        return "App"
+    if tier in {"management", "mgmt"} or any(term in padded for term in (" management ", " mgmt ")):
+        return "Mgmt"
+    return ""
+
+
+def shortened_subnet_name(name: str) -> str:
+    normalized = normalize_lookup(name)
+    if not normalized:
+        return ""
+    if normalized in {"public", "public subnet"}:
+        return "Public"
+    private_match = re.search(r"private\s+([a-z0-9]+)", normalized)
+    if private_match:
+        role = compact_private_subnet_role(private_match.group(1), normalized)
+        return f"Private-{role}" if role else "Private"
+    return name
 
 
 def collect_resource_requirements(

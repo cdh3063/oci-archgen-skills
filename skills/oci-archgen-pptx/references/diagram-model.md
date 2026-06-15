@@ -131,6 +131,7 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Use the input language for narrative fields such as `assumptions`, `architecture_notes`, `operational_advice`, `validation.best_practice_deviations`, and `validation.unresolved_questions`.
 - If the user says "서울리전", use `ap-seoul-1`.
 - If CIDRs are absent, use `10.0.0.0/16` for the VCN and sequential `/24` CIDRs for subnets.
+- Use concise role-based subnet names by default. Prefer `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`; do not create visible names that combine region, access type, and tier such as `Seoul Private App`.
 - If "웹, 와스 2개씩" is given, model two web servers and two WAS/application servers.
 - If Web and App tiers are both duplicated, model Public Subnet with Public LoadBalancer and Bastion, private Web subnet with Web servers, and private App subnet with Private/Internal LoadBalancer and App servers. Avoid direct one-to-one Web-to-App node pairing unless explicitly requested.
 - Public Subnet is only for public entry and administration controls such as Public LoadBalancer, WAF/API Gateway when requested, and Bastion. Always include Bastion in Public Subnet.
@@ -165,6 +166,7 @@ Use this JSON-like contract as the intermediate representation before producing 
 - For local peering, place `LPG` gateways on the facing VCN edges and connect them with a circuit line. For remote peering, place `RPG` gateways on the facing VCN edges and connect them with a circuit line.
 - If `region.availability_domains` is present, draw an Availability Domain container inside the Region and place the VCN inside it.
 - Public/DMZ subnet should appear before private tiers in the traffic direction. Security/inspection subnets should appear after Edge/Public and before App/Private.
+- Render subnet headers using concise role names only: `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Keep CIDR, region, and expanded type/tier details out of the visible subnet header.
 - For up to three subnets, render a single vertical stack by default. For four or more subnets, or whenever vertical space is insufficient and horizontal room is available, use a 2 x N or VCN-internal grid layout unless `layout.subnet_columns` is set.
 - Default resource placement is: API Gateway, Public LoadBalancer, Bastion, and WAF in Edge/Public; Network Firewall in Security/Inspection when present; Web servers in Web/Private; Compute, Functions, OKE, WAS, and app services in App/Private; Database, Exadata, MySQL, MySQL HeatWave, NoSQL, Data Flow, and Database Management in Data/Private; IAM, Audit, Object Storage, Logging, Monitoring, Vault, and related public services in Oracle Service Network; customer data centers and CPE outside the Region.
 - For redundant Web/App tiers, place the public LoadBalancer and Bastion in the public/edge subnet, place Web servers in a private Web subnet, place the private/internal LoadBalancer in the private App tier, and place App servers behind it as the backend set.

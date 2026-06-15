@@ -44,6 +44,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 - Do not reduce architecture component labels below 11 pt to force-fit a dense layout. Instead resize or reposition containers/icons, shorten the visible label, or move details to notes.
 - Keep font sizes readable and avoid text overlap. If a label cannot fit at 11 pt, shorten the label and move the detail to notes.
 - Render every diagram label as a transparent/no-fill text box. Do not use a white canvas behind connector labels, service labels, gateway labels, subnet labels, or container labels.
+- Keep visible OCI subnet labels short and role-based: `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Do not concatenate region, subnet type, tier, and CIDR into the header; avoid labels such as `Seoul Private App - Private - APP`.
 - For common long service labels, insert intentional line breaks instead of allowing PowerPoint to split words mid-token. Preferred breaks include `Public` / `Load Balancer`, `Internal` / `Load Balancer`, and `MySQL` / `HeatWave N`.
 - Follow the user's input language only for narrative content on slides 3 and 4, such as assumptions, security notes, rendering notes, and operational/best-practice checkpoints. Do not localize the architecture labels on slides 1 and 2 unless the user explicitly overrides this policy.
 

@@ -59,6 +59,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - For redundant Web/App tiers, show the public LoadBalancer in Edge/Public with Web servers as its backend set, and show a private/internal LoadBalancer in the private App tier with App servers as its backend set.
    - Preserve explicit `subnet` assignments; otherwise use `placement`, then infer placement from service `type`, `icon_key`, and `label`.
    - Label all subnets and tiers. Avoid connector labels on dense architecture slides unless the user explicitly asks for them; keep protocol or security-rule details in notes instead.
+   - Keep visible subnet labels concise: use `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Do not render verbose combined labels such as `Seoul Private App - Private - APP`, repeated public/private words, or CIDR suffixes in the subnet header.
    - Always show the external actor as a `User` icon labeled `User`, not `Internet Users`.
    - Render architecture component labels at 11 pt by default. If 11 pt text does not fit, resize or reposition containers/icons, shorten the label, or move details to notes rather than reducing the architecture label font.
    - Render all diagram label text boxes with transparent/no-fill backgrounds. Do not place white label canvases behind connector labels, service labels, gateway labels, subnet labels, or container labels.
@@ -102,6 +103,7 @@ Region
 - For four or more subnet tiers, or when vertical room is tight and horizontal room is available, use a 2 x N VCN-internal subnet layout instead of shrinking labels/icons into unreadability.
 - Put the VCN icon centered on the VCN container's upper-right vertex without a text label.
 - Put Route Table and Security List icons tightly against each subnet container's upper-right corner without text labels.
+- Use short role-based subnet labels in the diagram: `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Keep region names, CIDRs, and expanded type/tier details in model fields or notes, not in the visible subnet header.
 - Put an Oracle Service Network container to the right of the VCN with the same vertical size as the VCN when Oracle public services are represented. Label the container `OSN` to avoid narrow-box line wrapping.
 - Place the model's `oracle_service_network.services` or `public_services` icons vertically inside the Oracle Service Network. Do not draw Oracle Service Network services that are not present in the model.
 - When OSN has many services, use a compact readable `2 x N` service icon grid and reduce internal icon/label spacing before expanding the OSN width.
