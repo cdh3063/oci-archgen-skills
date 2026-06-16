@@ -3959,5 +3959,29 @@
       "source_svg": "assets/extracted-icons/container.svg",
       "size_px": 512
     }
+  },
+  "site-to-site-vpn": {
+    "label": "Site-to-Site VPN",
+    "aliases": [
+      "vpn",
+      "vpn lock",
+      "site to site vpn",
+      "site-to-site vpn",
+      "ipsec",
+      "ipsec vpn",
+      "ipsec-vpn"
+    ],
+    "asset_path": "assets/extracted-icons/site-to-site-vpn.wmf",
+    "source_type": "manual-pptx-extract",
+    "source_slide": 2,
+    "source_picture_name": "Picture 85",
+    "confidence": 1.0,
+    "match_source": {
+      "reference": "user-provided reference PPTX slide 2",
+      "shape_x_in": 2.858,
+      "shape_y_in": 4.195,
+      "shape_width_in": 0.286,
+      "shape_height_in": 0.262
+    }
   }
 }
