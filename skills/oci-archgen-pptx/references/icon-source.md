@@ -44,6 +44,8 @@ Oracle states that these assets contain OCI service icons and templates where av
 | `nat-gateway` | `nat-gateway` |
 | `service-gateway` | `service-gateway` |
 | `drg` | `dynamic-routing-gateway` |
+| `local-peering-gateway` | `dynamic-routing-gateway` icon asset with visible label `LPG` |
+| `remote-peering-gateway`, `remote-peering-connection` | `dynamic-routing-gateway` icon asset with visible label `DRG`; connector label `RPC` |
 | `object-storage` | `object-storage` |
 | `firewall` | `network-firewall` |
 

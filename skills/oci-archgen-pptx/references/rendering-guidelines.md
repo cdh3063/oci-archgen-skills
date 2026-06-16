@@ -34,7 +34,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 ## Labels And Text
 
-- Keep labels short and consistent. Use expanded terms in notes when the diagram needs compact labels such as `IGW`, `NAT`, `DRG`, `SGW`, `OSN`, `LPG`, or `RPG`.
+- Keep labels short and consistent. Use expanded terms in notes when the diagram needs compact labels such as `IGW`, `NAT`, `DRG`, `SGW`, `OSN`, `LPG`, or `RPC`.
 - Keep architecture-facing labels in English for every deck, regardless of the user's input language. This includes deck title, diagram title, outer/container labels, subnet labels, resource labels, gateway labels, connector labels, and model-visible service labels.
 - Use Title Case for English diagram labels and model-visible labels. For example, use `VPC Subnet`, `ODB Network`, `AWS Data Center`, `OCI Child Site`, `OCI Parents Region`, and `OCI Control Plane`.
 - Center-align primary outer-container labels at the top of the container unless a provider-specific guideline says otherwise.
@@ -90,6 +90,8 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 - Keep connector labels close to the relevant line and centered on the line when practical.
 - Render connector labels at 11 pt when they are shown.
 - For hub icons such as Transit Gateway, align the hub center with the connected container centers when the intended connection is vertical or horizontal.
+- For same-region Local Peering, use DRG icon assets at both peering endpoints, label those endpoint icons `LPG`, and place a transparent `Local Peering` label on or immediately above the connector line.
+- For cross-region Remote Peering, use DRG icon assets at both peering endpoints, label those icons `DRG` only, and place a transparent `RPC` label on or immediately above the connector line. Do not use `RPG` as a visible icon label.
 - Separate visually similar relationships, such as VCN peering and Data Guard, so they do not overlap or imply the wrong dependency.
 - Prefer orthogonal or staggered connector routing when multiple horizontal or vertical lines would collide.
 - Avoid connector labels in dense diagrams unless the label improves understanding.

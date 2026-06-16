@@ -1,0 +1,221 @@
+{
+  "title": "Fixture - Remote Peering DRG RPC",
+  "language": "en",
+  "assumptions": [
+    "Two VCNs are deployed across Seoul and Chuncheon regions.",
+    "Remote peering is represented as DRG icons labeled DRG with an RPC connector label."
+  ],
+  "architecture_notes": [
+    "Public subnets contain only ingress and administration controls.",
+    "Private application workloads stay in private subnets."
+  ],
+  "vcns": [
+    {
+      "id": "seoul-vcn",
+      "name": "Seoul VCN",
+      "cidr": "10.0.0.0/16",
+      "region": {
+        "name": "Seoul",
+        "oci_region": "ap-seoul-1"
+      },
+      "subnets": [
+        {
+          "id": "seoul-public",
+          "name": "Seoul Public",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.0.0.0/24",
+          "resources": [
+            "seoul-lb",
+            "seoul-bastion"
+          ]
+        },
+        {
+          "id": "seoul-app",
+          "name": "Seoul Private App",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.0.1.0/24",
+          "resources": [
+            "seoul-app-1",
+            "seoul-app-2"
+          ]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "seoul-igw",
+          "type": "internet-gateway",
+          "label": "IGW"
+        },
+        {
+          "id": "seoul-nat",
+          "type": "nat-gateway",
+          "label": "NAT"
+        },
+        {
+          "id": "seoul-rpc-drg",
+          "type": "remote-peering-gateway",
+          "label": "DRG"
+        }
+      ]
+    },
+    {
+      "id": "chuncheon-vcn",
+      "name": "Chuncheon VCN",
+      "cidr": "10.1.0.0/16",
+      "region": {
+        "name": "Chuncheon",
+        "oci_region": "ap-chuncheon-1"
+      },
+      "subnets": [
+        {
+          "id": "chuncheon-public",
+          "name": "Chuncheon Public",
+          "type": "public",
+          "tier": "edge",
+          "cidr": "10.1.0.0/24",
+          "resources": [
+            "chuncheon-lb",
+            "chuncheon-bastion"
+          ]
+        },
+        {
+          "id": "chuncheon-app",
+          "name": "Chuncheon Private App",
+          "type": "private",
+          "tier": "app",
+          "cidr": "10.1.1.0/24",
+          "resources": [
+            "chuncheon-app-1",
+            "chuncheon-app-2"
+          ]
+        }
+      ],
+      "gateways": [
+        {
+          "id": "chuncheon-igw",
+          "type": "internet-gateway",
+          "label": "IGW"
+        },
+        {
+          "id": "chuncheon-nat",
+          "type": "nat-gateway",
+          "label": "NAT"
+        },
+        {
+          "id": "chuncheon-rpc-drg",
+          "type": "remote-peering-gateway",
+          "label": "DRG"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "id": "seoul-lb",
+      "vcn": "seoul-vcn",
+      "type": "load-balancer",
+      "label": "Seoul Public LB",
+      "subnet": "Seoul Public",
+      "placement": "edge",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "seoul-bastion",
+      "vcn": "seoul-vcn",
+      "type": "bastion",
+      "label": "Seoul Bastion",
+      "subnet": "Seoul Public",
+      "placement": "edge",
+      "icon_key": "bastion"
+    },
+    {
+      "id": "seoul-app-1",
+      "vcn": "seoul-vcn",
+      "type": "app-server",
+      "label": "Seoul App 1",
+      "subnet": "Seoul Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "seoul-app-2",
+      "vcn": "seoul-vcn",
+      "type": "app-server",
+      "label": "Seoul App 2",
+      "subnet": "Seoul Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "chuncheon-lb",
+      "vcn": "chuncheon-vcn",
+      "type": "load-balancer",
+      "label": "Chuncheon Public LB",
+      "subnet": "Chuncheon Public",
+      "placement": "edge",
+      "icon_key": "load-balancer"
+    },
+    {
+      "id": "chuncheon-bastion",
+      "vcn": "chuncheon-vcn",
+      "type": "bastion",
+      "label": "Chuncheon Bastion",
+      "subnet": "Chuncheon Public",
+      "placement": "edge",
+      "icon_key": "bastion"
+    },
+    {
+      "id": "chuncheon-app-1",
+      "vcn": "chuncheon-vcn",
+      "type": "app-server",
+      "label": "Chuncheon App 1",
+      "subnet": "Chuncheon Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    },
+    {
+      "id": "chuncheon-app-2",
+      "vcn": "chuncheon-vcn",
+      "type": "app-server",
+      "label": "Chuncheon App 2",
+      "subnet": "Chuncheon Private App",
+      "placement": "app",
+      "icon_key": "compute"
+    }
+  ],
+  "connections": [
+    {
+      "id": "remote-peering",
+      "type": "remote-peering",
+      "from": "seoul-rpc-drg",
+      "to": "chuncheon-rpc-drg",
+      "label": "Remote Peering",
+      "arrow": false
+    }
+  ],
+  "operational_advice": {
+    "resilience": [
+      "Confirm remote peering attachment ownership and failover behavior."
+    ],
+    "security": [
+      "Restrict peering route propagation and NSG rules to required private CIDRs."
+    ],
+    "operations": [
+      "Monitor RPC connectivity and route table changes."
+    ],
+    "cost": [
+      "Review cross-region data transfer charges."
+    ],
+    "open": [
+      "Exact CIDR and route table propagation rules are unresolved."
+    ]
+  },
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": [
+      "Exact route table propagation rules are unresolved."
+    ]
+  }
+}

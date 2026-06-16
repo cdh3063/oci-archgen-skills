@@ -30,7 +30,7 @@ Use this skill to convert a user's natural-language OCI architecture request int
    - Always include Bastion in the Public Subnet for OCI architecture diagrams.
    - If the overall diagram has substantial unused left/right whitespace, render OSN to use that space. When OSN is rendered, include `IAM` and `Audit`; if any DB is present, also include `Object Storage`.
    - When both Web and App tiers are redundant, model the traffic chain as Public LoadBalancer -> Web backend set and Private/Internal LoadBalancer -> App backend set; do not pin individual Web nodes directly to individual App nodes unless the user explicitly requests that pattern.
-   - For two-VCN DR, use top-level `vcns`. If both VCNs are in the same region, model Local Peering Gateway (`LPG`); if regions differ, model Remote Peering Gateway/Connection (`RPG`).
+   - For two-VCN DR, use top-level `vcns`. If both VCNs are in the same region, model Local Peering Gateway (`LPG`); if regions differ, model Remote Peering Connection (`RPC`) between DRG gateways.
    - Add NSG/security-rule notes for LoadBalancer to backend, bastion to private targets, app to database, and private egress.
 
 3. Map services to OCI PowerPoint icons.
@@ -116,7 +116,8 @@ Region
 - Place services only inside their owning subnet unless the resource is external to OCI or is a VCN-level gateway.
 - Place VCN-level gateways inside the Region and adjacent to the VCN edge: IGW/NAT/DRG on the left side when shown, Service Gateway on the boundary between VCN and OSN when shown.
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet instead of directly beside IGW.
-- For local VCN peering, place `LPG` gateways on facing VCN edges near the private App tier when possible, and connect them with a no-arrow circuit line. For remote VCN peering, place `RPG` gateways with the same rule and keep them visually separated from DB/Data Guard lines.
+- For local VCN peering, place `LPG` endpoints on facing VCN edges near the private App tier when possible. Render the endpoint with the DRG icon asset but label it `LPG`, and connect LPG endpoints with a no-arrow circuit line labeled `Local Peering`.
+- For remote VCN peering, place `DRG` icons on facing VCN/Region edges near the private App tier when possible. Do not render `RPG` as the icon or label. Use the DRG icon asset labeled `DRG`, and connect the icons with a no-arrow circuit line labeled `RPC`.
 - Put the external `User` actor outside the Region boundary and always render it with the `user` icon. Do not label it `Internet Users`. Place On-Prem, CPE, and Customer Data Center endpoints outside the Region only when requested.
 - For on-premises hybrid connectivity, place On-Prem, Customer Data Center, and CPE icons inside an external network container to the left of the OCI Region. The container should use the same visual family as the OCI Region boundary.
 - For hybrid/on-premises diagrams, center the combined visual group, including the external network container, CPE-to-DRG lines, OCI Region, VCN, and OSN. Do not center only the OCI Region while leaving the whole diagram left-heavy.

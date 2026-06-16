@@ -86,7 +86,11 @@ GATEWAY_ALIASES = {
     "nat-gateway": ("NAT Gateway", "NAT"),
     "service-gateway": ("Service Gateway", "SGW"),
     "drg": ("Dynamic Routing Gateway", "DRG"),
+    "dynamic-routing-gateway": ("Dynamic Routing Gateway", "DRG"),
     "local-peering-gateway": ("Local Peering Gateway", "LPG"),
+    "remote-peering-gateway": ("Dynamic Routing Gateway", "DRG"),
+    "remote-peering-connection": ("Remote Peering Connection", "RPC"),
+    "rpg": ("Dynamic Routing Gateway", "DRG"),
 }
 
 HYBRID_CONNECTION_COMPACT_TERMS = {
@@ -290,6 +294,7 @@ def validate_layout_rules(pptx_path: Path) -> tuple[int, list[str], list[str]]:
     checks += validate_icon_label_text(elements, errors)
     checks += validate_label_text_box_fill(elements, errors)
     checks += validate_connector_labels(elements, errors)
+    checks += validate_relationship_connector_lengths(elements, errors)
     checks += validate_hybrid_network_layout(elements, errors)
 
     return checks, errors, warnings
@@ -606,6 +611,35 @@ def validate_connector_labels(
             )
         else:
             checks += 1
+    return checks
+
+
+def validate_relationship_connector_lengths(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    prefixes = (
+        "Peering connection ",
+        "Data Guard connection ",
+        "Transit connection ",
+        "Hybrid connection ",
+    )
+    for name, matches in elements.items():
+        if not any(name.startswith(prefix) for prefix in prefixes):
+            continue
+        for connector in matches:
+            points = connector_line_points(connector)
+            if points is None:
+                errors.append(f"{connector.name} has no readable connector geometry")
+                continue
+            start, end = points
+            length = math.hypot(end[0] - start[0], end[1] - start[1])
+            if length < 0.08:
+                errors.append(
+                    f"{connector.name} is too short to be visible: length={length:.3f}"
+                )
+            else:
+                checks += 1
     return checks
 
 
@@ -1530,9 +1564,30 @@ def collect_connection_requirements(
             requirements,
             "connection",
             f"connections[{index}].label|type",
-            connection.get("label"),
-            connection.get("type"),
+            *connection_label_candidates(connection),
         )
+
+
+def connection_label_candidates(connection: dict[str, Any]) -> tuple[str, ...]:
+    text = normalize_lookup(
+        " ".join(
+            clean_string(connection.get(field))
+            for field in ("type", "kind", "label", "id")
+        )
+    )
+    compact = text.replace(" ", "").replace("-", "")
+    if "localpeering" in compact or compact == "lpg":
+        return ("Local Peering",)
+    if "remotepeering" in compact or compact in {"rpg", "rpc"}:
+        return ("RPC",)
+    return tuple(
+        candidate
+        for candidate in (
+            clean_string(connection.get("label")),
+            clean_string(connection.get("type")),
+        )
+        if candidate
+    )
 
 
 def model_subnet_boxes(

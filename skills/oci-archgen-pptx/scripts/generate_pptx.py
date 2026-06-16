@@ -77,9 +77,9 @@ GATEWAY_ICON_KEYS = {
     "internet-gateway": "internet-gateway",
     "local-peering-gateway": "dynamic-routing-gateway",
     "nat-gateway": "nat-gateway",
-    "remote-peering-gateway": "remote-peering-gateway",
-    "remote-peering-connection": "remote-peering-gateway",
-    "rpg": "remote-peering-gateway",
+    "remote-peering-gateway": "dynamic-routing-gateway",
+    "remote-peering-connection": "dynamic-routing-gateway",
+    "rpg": "dynamic-routing-gateway",
     "service-gateway": "service-gateway",
 }
 
@@ -89,7 +89,6 @@ GATEWAY_SHORT_LABELS = {
     "dynamic-routing-gateway": "DRG",
     "internet-gateway": "IGW",
     "nat-gateway": "NAT",
-    "remote-peering-gateway": "RPG",
     "service-gateway": "SGW",
 }
 
@@ -1093,14 +1092,14 @@ class Renderer:
             if osn_services:
                 region_box = Box(0.55, 0.72, 12.25, 6.02)
                 vcn_boxes = [
-                    Box(1.03, 1.23, 4.49, 5.02),
-                    Box(5.92, 1.23, 4.49, 5.02),
+                    Box(1.20, 1.23, 3.88, 5.02),
+                    Box(6.80, 1.23, 3.88, 5.02),
                 ]
             else:
                 region_box = Box(0.75, 0.74, 11.95, 6.0)
                 vcn_boxes = [
-                    Box(1.50, 1.22, 4.45, 5.05),
-                    Box(7.55, 1.22, 4.45, 5.05),
+                    Box(1.20, 1.22, 4.35, 5.05),
+                    Box(7.75, 1.22, 4.35, 5.05),
                 ]
             self._draw_container(
                 slide,
@@ -2735,7 +2734,11 @@ class Renderer:
                 occupied.append(y)
             elif gateway_type in {"local-peering-gateway", "lpg", "remote-peering-gateway", "remote-peering-connection", "rpg"}:
                 side = peering_side or str(gateway.get("side") or "left").lower()
-                x = vcn_box.right + 0.24 if side == "right" else vcn_box.x - 0.72
+                x = (
+                    vcn_box.right + 0.10
+                    if side == "right"
+                    else vcn_box.x - STANDARD_ICON_SIZE - 0.10
+                )
                 occupied = right_ys if side == "right" else left_ys
                 y = self._gateway_y(key, gateway_type, subnet_boxes, vcn_box)
                 occupied.append(y)
@@ -2806,7 +2809,7 @@ class Renderer:
         if gateway_type in {"local-peering-gateway", "lpg"}:
             return "LPG"
         if gateway_type in {"remote-peering-gateway", "remote-peering-connection", "rpg"}:
-            return "RPG"
+            return "DRG"
         return GATEWAY_SHORT_LABELS.get(key, str(gateway.get("label") or key))
 
     def _draw_resources(
@@ -3310,7 +3313,14 @@ class Renderer:
             x = line_right - label_w - 0.08
         external = self._box_for_endpoint("external-network") or self._box_for_endpoint("on-prem-network")
         min_x = external.right + 0.10 if external else 0.12
-        x = min(max(x, min_x), SLIDE_W - label_w - 0.12)
+        max_x = SLIDE_W - label_w - 0.12
+        drg = self._box_for_endpoint("drg") or self._box_for_endpoint("dynamic-routing-gateway")
+        if drg:
+            max_x = min(max_x, drg.x - label_w - 0.10)
+        if max_x < min_x:
+            x = max(0.12, max_x)
+        else:
+            x = min(max(x, min_x), max_x)
         y = start[1] - label_h - 0.04
         slide.add_text(
             f"Hybrid connection label {index}",
@@ -3353,6 +3363,34 @@ class Renderer:
                 end,
                 arrow=False,
             )
+            label = self._peering_connection_label(connection)
+            slide.add_text(
+                f"Peering label {source_id} to {target_id}",
+                self._flow_label_box(start, end, label),
+                label,
+                size_pt=CONNECTOR_LABEL_SIZE,
+                color=CONNECTOR_LABEL_COLOR,
+                bold=True,
+                align="ctr",
+                valign="ctr",
+                fill=CONNECTOR_LABEL_FILL,
+                margin=0.02,
+            )
+
+    def _peering_connection_label(self, connection: dict[str, Any]) -> str:
+        text = normalize_lookup(
+            " ".join(
+                str(connection.get(field) or "")
+                for field in ("type", "kind", "label", "id")
+            )
+        )
+        compact = text.replace(" ", "").replace("-", "")
+        if "localpeering" in compact or compact == "lpg":
+            return "Local Peering"
+        if "remotepeering" in compact or compact in {"rpg", "rpc"}:
+            return "RPC"
+        label = str(connection.get("label") or "").strip()
+        return label or "Peering"
 
     def _draw_transit_routing_exceptions(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         transit_links: list[tuple[str, str, str, tuple[float, float], tuple[float, float]]] = []

@@ -73,8 +73,8 @@ Use this JSON-like contract as the intermediate representation before producing 
       "gateways": [
         {
           "id": "primary-rpg",
-          "type": "remote-peering-gateway|remote-peering-connection|local-peering-gateway",
-          "label": "Remote Peering Gateway"
+          "type": "dynamic-routing-gateway|remote-peering-connection|local-peering-gateway",
+          "label": "Remote Peering Endpoint"
         }
       ]
     }
@@ -139,8 +139,8 @@ Use this JSON-like contract as the intermediate representation before producing 
 - If the diagram has substantial unused left/right whitespace, include OSN in the model. OSN baseline services are `IAM` and `Audit`; if any DB, MySQL HeatWave, Exadata, Autonomous Database, or database tier is present, also include `Object Storage`.
 - When OSN is included, add `service-gateway` to `vcn.gateways` and label it `Service Gateway`.
 - If two or more VCNs are modeled, use top-level `vcns` instead of `vcn`; each VCN entry uses the same `subnets` and `gateways` schema as `vcn`.
-- If two VCNs are in the same OCI region, model local peering with `local-peering-gateway` endpoints and an `LPG` connection.
-- If two VCNs are in different OCI regions, model remote peering with `remote-peering-gateway` or `remote-peering-connection` endpoints and an `RPG` connection.
+- If two VCNs are in the same OCI region, model local peering with `local-peering-gateway` endpoints and a `Local Peering` connection. The visible endpoint label is `LPG`; the endpoint uses the DRG icon asset.
+- If two VCNs are in different OCI regions, model remote peering with DRG gateways or `remote-peering-connection` references and an `RPC` connection. The visible icon label must be `DRG` only; the connection line label is `RPC`. Do not use `RPG` as the visible icon label.
 - If "ExaDI" is given, normalize to Exadata Database on Dedicated Infrastructure.
 - Always render the external actor with the `user` icon labeled `User`; do not use `Internet Users`.
 - Do not add optional OSN services such as Logging, Monitoring, Object Storage, Vault, or Audit unless the user requested them or the architecture explicitly depends on them.
@@ -163,7 +163,8 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Apply `references/rendering-guidelines.md` for common deck structure, title slide, diagram title, footer disclaimer, label alignment, connector readability, notes, checkpoints, and render/preview validation rules.
 - Top-level containers: Region, then VCN, then subnet containers.
 - For top-level `vcns`, draw VCNs side by side. Use one Region container when their region is the same, and separate Region containers when their `region.oci_region` values differ.
-- For local peering, place `LPG` gateways on the facing VCN edges and connect them with a circuit line. For remote peering, place `RPG` gateways on the facing VCN edges and connect them with a circuit line.
+- For local peering, place `LPG` endpoints on the facing VCN edges and connect them with a circuit line labeled `Local Peering`. The endpoint should use the DRG icon asset with the visible label `LPG`.
+- For remote peering, place `DRG` icons on the facing VCN or Region edges and connect them with a circuit line labeled `RPC`. The visible icon label must be `DRG` only; do not render `RPG` as the icon label.
 - If `region.availability_domains` is present, draw an Availability Domain container inside the Region and place the VCN inside it.
 - Public/DMZ subnet should appear before private tiers in the traffic direction. Security/inspection subnets should appear after Edge/Public and before App/Private.
 - Render subnet headers using concise role names only: `Public`, `Private-Web`, `Private-App`, `Private-DB`, `Security`, or `Private-Mgmt`. Keep CIDR, region, and expanded type/tier details out of the visible subnet header.
@@ -173,7 +174,7 @@ Use this JSON-like contract as the intermediate representation before producing 
 - Place user/internet actors outside the OCI region boundary.
 - Place gateways near the VCN edge. IGW/NAT/DRG/FastConnect-adjacent symbols are placed on the left side; Service Gateway is placed between the VCN and OSN when OSN is shown.
 - Place IGW near the public/edge subnet. Place NAT Gateway near the topmost private subnet.
-- Place LPG/RPG gateways on facing VCN edges near the private App tier when possible, keeping them visually separated from DB/Data Guard lines.
+- Place LPG/DRG peering endpoints on facing VCN edges near the private App tier when possible, keeping Local Peering/RPC lines visually separated from DB/Data Guard lines.
 - Place On-Prem/Customer Data Center/CPE outside the Region and connect it to DRG with a `connections` entry such as FastConnect or VPN.
 - For On-Prem/Customer Data Center/CPE, draw a customer network box to the left of the OCI Region using the same visual family as the Region container. Place CPE and customer data center icons inside the box and keep their labels contained and readable.
 - Place the `User` icon and label near the external network container, usually centered above it, with enough vertical spacing to avoid overlap with the external network label/boundary.

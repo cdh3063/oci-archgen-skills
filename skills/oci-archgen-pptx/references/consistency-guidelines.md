@@ -14,7 +14,7 @@ Use these rules before creating, modifying, or reviewing an OCI architecture PPT
 - Use one canonical topology representation. Do not mix a top-level `regions` list with a single aggregated `vcn` that contains resources from multiple regions.
 - For one VCN, use the standard `region -> vcn -> subnets -> resources` contract.
 - For multiple VCNs, use top-level `vcns`, each with its own region, CIDR, subnets, gateways, resources, and connections.
-- For cross-region DR, model each region separately and show DRG/RPG or remote peering between the regions. For same-region VCN peering, model LPG between VCNs.
+- For cross-region DR, model each region separately and show DRG icons connected by an `RPC` line. The visible icon label must be `DRG` only; do not use `RPG` as a visible icon label. For same-region VCN peering, model LPG endpoints between VCNs; the endpoint uses the DRG icon asset but the visible icon label is `LPG`.
 - Every resource must have exactly one owning placement: subnet, OSN, VCN-level gateway, or external network.
 - If a DR design omits RTO/RPO, failover mechanism, Data Guard protection mode, DNS/GSLB/Traffic Management, or automation scope, record it as an unresolved question and, when it materially affects the architecture, as a best-practice deviation or explicit assumption.
 
