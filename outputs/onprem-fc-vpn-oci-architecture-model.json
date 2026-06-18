@@ -1,0 +1,250 @@
+{
+  "title": "On-Prem FastConnect and VPN OCI Architecture",
+  "subtitle": "Hybrid OCI architecture with on-premises Exadata and redundant Web/App tiers",
+  "language": "ko",
+  "region": {
+    "name": "Seoul",
+    "oci_region": "ap-seoul-1"
+  },
+  "assumptions": [
+    "OCI 리전이 명시되지 않아 ap-seoul-1 단일 리전으로 가정했습니다.",
+    "CIDR이 명시되지 않아 VCN 10.0.0.0/16 및 /24 단위 예시 서브넷으로 표기했습니다.",
+    "On-Premises에는 고객 데이터센터, CPE, On-Prem Exadata가 존재하는 것으로 모델링했습니다.",
+    "전용선은 FastConnect, VPN은 Site-to-Site VPN 백업 경로로 표현했습니다.",
+    "OCI DB 서브넷에는 구체 리소스가 명시되지 않아 DB Service 논리 리소스를 배치했습니다.",
+    "공간 활용 및 DB 백업/Oracle 서비스 접근 맥락을 위해 OSN을 표시했습니다."
+  ],
+  "architecture_notes": [
+    "FastConnect와 Site-to-Site VPN은 On-Prem CPE에서 OCI DRG로 연결되는 별도 하이브리드 네트워크 경로입니다.",
+    "Public Subnet은 Public Load Balancer와 Bastion만 포함하고, Web/App/DB 워크로드는 private subnet에 배치했습니다.",
+    "Web tier와 App tier는 각각 2대의 서버로 이중화하고, Web은 Public Load Balancer, App은 Internal Load Balancer 뒤에 배치했습니다.",
+    "Private subnet의 외부 패치/업데이트 경로는 NAT Gateway, Object Storage 등 Oracle 서비스 접근은 Service Gateway와 OSN으로 표현했습니다.",
+    "On-Prem Exadata와 OCI DB tier 간 실제 복제 또는 동기화 방식은 요구사항에 명시되지 않아 다이어그램에는 표시하지 않았습니다."
+  ],
+  "layout": {
+    "subnet_columns": 1
+  },
+  "external_networks": [
+    {
+      "id": "cpe",
+      "type": "customer-premises-equipment",
+      "label": "CPE",
+      "icon_key": "customer-premises-equipment-cpe"
+    }
+  ],
+  "oracle_service_network": {
+    "enabled": true,
+    "services": [
+      {
+        "id": "iam",
+        "type": "iam",
+        "label": "IAM",
+        "icon_key": "iam"
+      },
+      {
+        "id": "audit",
+        "type": "audit",
+        "label": "Audit",
+        "icon_key": "audit"
+      },
+      {
+        "id": "object-storage",
+        "type": "object-storage",
+        "label": "Object Storage",
+        "icon_key": "object-storage"
+      }
+    ]
+  },
+  "vcn": {
+    "name": "Hybrid VCN",
+    "cidr": "10.0.0.0/16",
+    "subnets": [
+      {
+        "name": "Public",
+        "type": "public",
+        "tier": "public",
+        "cidr": "10.0.0.0/24",
+        "resources": [
+          "public-lb",
+          "bastion"
+        ]
+      },
+      {
+        "name": "Private-Web",
+        "type": "private",
+        "tier": "web",
+        "cidr": "10.0.1.0/24",
+        "resources": [
+          "web"
+        ]
+      },
+      {
+        "name": "Private-App",
+        "type": "private",
+        "tier": "app",
+        "cidr": "10.0.2.0/24",
+        "resources": [
+          "internal-lb",
+          "app"
+        ]
+      },
+      {
+        "name": "Private-DB",
+        "type": "private",
+        "tier": "db",
+        "cidr": "10.0.3.0/24",
+        "resources": [
+          "db-service"
+        ]
+      }
+    ],
+    "gateways": [
+      {
+        "id": "igw-1",
+        "type": "internet-gateway",
+        "label": "Internet Gateway"
+      },
+      {
+        "id": "nat-1",
+        "type": "nat-gateway",
+        "label": "NAT Gateway"
+      },
+      {
+        "id": "sgw-1",
+        "type": "service-gateway",
+        "label": "Service Gateway"
+      },
+      {
+        "id": "drg-1",
+        "type": "drg",
+        "label": "Dynamic Routing Gateway"
+      },
+      {
+        "id": "fastconnect",
+        "type": "fastconnect",
+        "label": "FastConnect"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "id": "onprem-exadata",
+      "type": "exadata",
+      "label": "On-Prem Exadata",
+      "placement": "external",
+      "icon_key": "exadata-database-service",
+      "count": 1
+    },
+    {
+      "id": "public-lb",
+      "type": "load-balancer",
+      "label": "Public Load Balancer",
+      "subnet": "Public",
+      "placement": "edge",
+      "icon_key": "load-balancer",
+      "count": 1
+    },
+    {
+      "id": "bastion",
+      "type": "bastion",
+      "label": "Bastion",
+      "subnet": "Public",
+      "placement": "edge",
+      "icon_key": "bastion",
+      "count": 1
+    },
+    {
+      "id": "web",
+      "type": "web-server",
+      "label": "Web Server",
+      "subnet": "Private-Web",
+      "placement": "app",
+      "icon_key": "compute",
+      "count": 2,
+      "ha_group": "web-ha"
+    },
+    {
+      "id": "internal-lb",
+      "type": "load-balancer",
+      "label": "Internal Load Balancer",
+      "subnet": "Private-App",
+      "placement": "app",
+      "icon_key": "load-balancer",
+      "count": 1
+    },
+    {
+      "id": "app",
+      "type": "app-server",
+      "label": "App Server",
+      "subnet": "Private-App",
+      "placement": "app",
+      "icon_key": "compute",
+      "count": 2,
+      "ha_group": "app-ha"
+    },
+    {
+      "id": "db-service",
+      "type": "database",
+      "label": "DB Service",
+      "subnet": "Private-DB",
+      "placement": "data",
+      "icon_key": "database",
+      "count": 1
+    }
+  ],
+  "connections": [
+    {
+      "id": "fastconnect-primary",
+      "type": "fastconnect",
+      "from": "cpe",
+      "to": "drg-1",
+      "label": "FastConnect",
+      "arrow": false
+    },
+    {
+      "id": "vpn-backup",
+      "type": "vpn",
+      "from": "cpe",
+      "to": "drg-1",
+      "label": "Site-to-Site VPN",
+      "arrow": false
+    }
+  ],
+  "operational_advice": {
+    "resilience": [
+      "FastConnect 장애 시 VPN 백업 경로로 전환되는 라우팅 정책과 우선순위를 검증하십시오.",
+      "Web/App 서버는 Fault Domain 또는 Availability Domain 분산 배치를 운영 표준으로 정의하십시오.",
+      "DB Service와 On-Prem Exadata 간 복제 또는 백업/복구 목표가 필요한지 결정하십시오."
+    ],
+    "security": [
+      "On-Prem CIDR, VCN CIDR, subnet CIDR이 겹치지 않도록 주소 계획을 확정하십시오.",
+      "Public Load Balancer에서 Web backend로만 접근을 허용하고, Web/App/DB 서브넷은 private route만 사용하십시오.",
+      "App to DB 접근은 필요한 DB 포트와 App NSG로 제한하십시오.",
+      "Bastion 접속은 승인된 운영자 CIDR과 감사 로그 수집 대상으로 제한하십시오."
+    ],
+    "operations": [
+      "DRG route table, VCN route table, CPE/BGP 설정 변경을 공동 변경 관리 대상으로 등록하십시오.",
+      "FastConnect, VPN tunnel, DRG attachment, Load Balancer health check를 모니터링하십시오.",
+      "OSN/Object Storage 접근 경로와 백업 복구 절차를 정기적으로 점검하십시오."
+    ],
+    "cost": [
+      "FastConnect 포트/회선, VPN, NAT Gateway, Load Balancer, Object Storage 비용을 별도 산정하십시오.",
+      "Web/App 이중화 기준과 DB 용량 기준을 트래픽 패턴에 맞춰 산정하십시오."
+    ],
+    "open": [
+      "실제 OCI Region, CIDR, On-Prem CIDR",
+      "FastConnect 대역폭과 BGP/정적 라우팅 정책",
+      "VPN 터널 수와 암호화/라우팅 정책",
+      "OCI DB subnet의 실제 DB 리소스 배치 여부",
+      "On-Prem Exadata와 OCI DB tier 사이의 복제/백업 요구사항"
+    ]
+  },
+  "validation": {
+    "best_practice_deviations": [],
+    "unresolved_questions": [
+      "실제 OCI Region과 CIDR이 명시되지 않았습니다.",
+      "OCI DB subnet에 배치할 실제 DB 서비스가 명시되지 않았습니다.",
+      "On-Prem Exadata와 OCI DB tier 사이의 데이터 보호 방식이 명시되지 않았습니다."
+    ]
+  }
+}

@@ -1323,22 +1323,23 @@ class Renderer:
             align="ctr",
         )
 
-        tgw = aws.get("transit_gateway") or {}
-        tgw_label = str(tgw.get("label") or "Transit Gateway")
-        tgw_id = str(tgw.get("id") or "aws-tgw")
-        tgw_box = Box(1.59, 4.02, 0.48, 0.48)
-        self._draw_aws_transit_gateway_icon(slide, "Icon Transit Gateway", tgw_box)
-        slide.add_text(
-            "Label Transit Gateway",
-            Box(tgw_box.right + 0.10, tgw_box.y + 0.16, 1.35, 0.28),
-            tgw_label,
-            size_pt=STANDARD_ICON_LABEL_SIZE,
-            color="312D2A",
-            align="l",
-            valign="ctr",
-            margin=0.01,
-        )
-        self._register_box_aliases(tgw_box, tgw_id, tgw_label, "Transit Gateway", "TGW")
+        if self._odb_aws_has_transit_gateway(model):
+            tgw = aws.get("transit_gateway") or {}
+            tgw_label = str(tgw.get("label") or "Transit Gateway")
+            tgw_id = str(tgw.get("id") or "aws-tgw")
+            tgw_box = Box(1.59, 4.02, 0.48, 0.48)
+            self._draw_aws_transit_gateway_icon(slide, "Icon Transit Gateway", tgw_box)
+            slide.add_text(
+                "Label Transit Gateway",
+                Box(tgw_box.right + 0.10, tgw_box.y + 0.16, 1.35, 0.28),
+                tgw_label,
+                size_pt=STANDARD_ICON_LABEL_SIZE,
+                color="312D2A",
+                align="l",
+                valign="ctr",
+                margin=0.01,
+            )
+            self._register_box_aliases(tgw_box, tgw_id, tgw_label, "Transit Gateway", "TGW")
 
         control = (model.get("oci_parents_region") or {}).get("control_plane") or {}
         control_label = str(control.get("label") or "OCI Control Plane")
@@ -1839,6 +1840,20 @@ class Renderer:
                 "oracledatabaseataws",
             )
         )
+
+    def _odb_aws_has_transit_gateway(self, model: dict[str, Any]) -> bool:
+        aws = model.get("aws") or {}
+        if isinstance(aws.get("transit_gateway"), dict) and aws.get("transit_gateway"):
+            return True
+        for connection in model.get("connections") or []:
+            if not isinstance(connection, dict):
+                continue
+            compact = normalize_lookup(
+                " ".join(str(connection.get(field) or "") for field in ("id", "type", "kind", "label"))
+            ).replace(" ", "").replace("-", "")
+            if "transit" in compact or "tgw" in compact:
+                return True
+        return False
 
     def _odb_aws_azs(self, model: dict[str, Any]) -> list[dict[str, Any]]:
         aws = model.get("aws") or {}
@@ -2598,11 +2613,27 @@ class Renderer:
         networks = self._external_networks(model)
         network_box = None
         if networks:
+            visible_networks: list[dict[str, Any]] = []
+            skipped_networks: list[dict[str, Any]] = []
+            for network in networks:
+                if self._is_external_network_container_marker(network) and len(networks) > 1:
+                    skipped_networks.append(network)
+                else:
+                    visible_networks.append(network)
+            if not visible_networks:
+                visible_networks = networks
+
             network_box = self._draw_external_network_container(
-                slide, model, networks, subnet_boxes, region_box, vcn_box
+                slide, model, visible_networks, subnet_boxes, region_box, vcn_box
             )
-            center_ys = self._external_network_center_ys(model, networks, network_box, subnet_boxes, vcn_box)
-            for index, network in enumerate(networks):
+            for network in skipped_networks:
+                label = str(network.get("label") or network.get("type") or "On-Prem")
+                network_id = str(network.get("id") or normalize_lookup(label) or "external-network")
+                for alias in self._external_network_aliases(network, label, network_id):
+                    self.boxes[alias] = network_box
+
+            center_ys = self._external_network_center_ys(model, visible_networks, network_box, subnet_boxes, vcn_box)
+            for index, network in enumerate(visible_networks):
                 center_y = center_ys[index]
                 label = str(network.get("label") or network.get("type") or "On-Prem")
                 icon_key = str(network.get("icon_key") or network.get("type") or "customer-data-center")
@@ -2681,8 +2712,8 @@ class Renderer:
             "external-network",
             "External Network boundary",
             box,
-            "On-Prem Network",
-            Box(box.x + 0.08, box.y + 0.09, box.w - 0.16, 0.34),
+            "On-Prem\nNetwork",
+            Box(box.x + 0.08, box.y + 0.08, box.w - 0.16, 0.48),
             11.0,
             bold=True,
             align="ctr",
@@ -2732,6 +2763,14 @@ class Renderer:
             normalize_lookup(network.get("label")),
         }
         return any(value == "cpe" or "customer premises" in value for value in values)
+
+    def _is_external_network_container_marker(self, network: dict[str, Any]) -> bool:
+        for field in ("id", "label"):
+            normalized = normalize_lookup(network.get(field))
+            compact = normalized.replace(" ", "").replace("-", "")
+            if compact in {"onpremnetwork", "externalnetwork", "customernetwork"}:
+                return True
+        return False
 
     def _external_network_anchor_y(
         self,
@@ -3429,7 +3468,13 @@ class Renderer:
                 occupied = right_ys if place_right else left_ys
                 preferred_y = self._gateway_y(key, gateway_type, subnet_boxes, vcn_box, model)
                 if key == "dynamic-routing-gateway" and self._hybrid_external_peer_center_y(model) is not None:
-                    y = min(max(preferred_y, region_box.y + 0.72), region_box.bottom - 0.92)
+                    y = self._avoid_gateway_overlap(
+                        preferred_y,
+                        occupied,
+                        region_box.y + 0.72,
+                        region_box.bottom - 0.92,
+                    )
+                    occupied.append(y)
                 else:
                     y = self._avoid_gateway_overlap(
                         preferred_y,

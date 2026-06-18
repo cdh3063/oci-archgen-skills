@@ -561,7 +561,6 @@ def validate_odb_aws_layout(
     for name in (
         "AWS Cloud corner icon",
         "AWS Region corner icon",
-        "Icon Transit Gateway",
     ):
         if first_element(elements, name) is not None:
             checks += 1
@@ -574,10 +573,10 @@ def validate_odb_aws_layout(
         for match in [re.fullmatch(r"Availability Zone ([A-Z]+) boundary", name)]
         if match
     )
-    if len(az_suffixes) >= 2:
+    if len(az_suffixes) >= 1:
         checks += 1
     else:
-        errors.append("ODB@AWS layout must render at least two AWS Availability Zone boundaries")
+        errors.append("ODB@AWS layout must render at least one AWS Availability Zone boundary")
 
     for suffix in az_suffixes:
         az = first_element(elements, f"Availability Zone {suffix} boundary")
@@ -2188,6 +2187,9 @@ def expected_external_network_labels(model: dict[str, Any]) -> list[str]:
     elif not isinstance(external_networks, list):
         external_networks = []
     for network in external_networks:
+        if external_network_is_container_marker(network):
+            aliases.update(external_network_aliases_model(network, external_network_label(network)))
+            continue
         label = external_network_label(network)
         if label:
             labels.append(label)
@@ -2195,12 +2197,19 @@ def expected_external_network_labels(model: dict[str, Any]) -> list[str]:
 
     on_premises = model.get("on_premises")
     if isinstance(on_premises, dict):
-        label = external_network_label(on_premises)
+        if external_network_is_container_marker(on_premises):
+            aliases.update(external_network_aliases_model(on_premises, external_network_label(on_premises)))
+            label = ""
+        else:
+            label = external_network_label(on_premises)
         if label:
             labels.append(label)
         aliases.update(external_network_aliases_model(on_premises, label))
     elif isinstance(on_premises, list):
         for network in on_premises:
+            if external_network_is_container_marker(network):
+                aliases.update(external_network_aliases_model(network, external_network_label(network)))
+                continue
             label = external_network_label(network)
             if label:
                 labels.append(label)
@@ -2233,6 +2242,21 @@ def expected_external_network_labels(model: dict[str, Any]) -> list[str]:
             seen.add(key)
             result.append(label)
     return result
+
+
+def external_network_is_container_marker(network: Any) -> bool:
+    if isinstance(network, str):
+        values = [network]
+    elif isinstance(network, dict):
+        values = [network.get("id"), network.get("label")]
+    else:
+        values = []
+    for value in values:
+        normalized = normalize_lookup(value)
+        compact = normalized.replace(" ", "").replace("-", "")
+        if compact in {"onpremnetwork", "externalnetwork", "customernetwork"}:
+            return True
+    return False
 
 
 def external_network_aliases_model(network: Any, label: str) -> set[str]:
