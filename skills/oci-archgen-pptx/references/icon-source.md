@@ -29,6 +29,20 @@ Oracle states that these assets contain OCI service icons and templates where av
 - Do not use non-OCI vendor icons for OCI services.
 - Keep labels explicit even when the icon is recognizable.
 
+## Oracle Database@AWS Assets
+
+ODB@AWS diagrams use provider-specific icons extracted from the reference deck:
+
+`/Users/ddchoi/Downloads/odb-aws-architecture.pptx`
+
+Registered assets live under `assets/odb-aws/` and are documented in `assets/odb-aws/asset-manifest.json`. Regenerate them with:
+
+```bash
+scripts/extract_odb_aws_assets.py /Users/ddchoi/Downloads/odb-aws-architecture.pptx --out assets/odb-aws
+```
+
+The renderer must use the registered PNG assets for AWS Cloud, AWS Region, Amazon VPC, EC2 Applications, ODB Network, ODB subnet, AWS Data Center, OCI VCN, OCI subnet, Exadata, ODB Peering, Oracle Database@AWS, and Transit Gateway. Do not hand-draw fallback icons for these ODB@AWS elements; if one is missing, extract it from the reference PPTX and update the manifest.
+
 ## Common Icon Keys
 
 | Model type | Preferred icon key |

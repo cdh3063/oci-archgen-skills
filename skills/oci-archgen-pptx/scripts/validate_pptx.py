@@ -260,6 +260,10 @@ def validate_model_layout_rules(
     if not elements:
         return checks, errors, warnings
 
+    if is_odb_aws_model(model):
+        checks += validate_model_odb_aws_layout(model, elements, errors)
+        return checks, errors, warnings
+
     checks += validate_model_resource_containment(model, elements, errors, warnings)
     checks += validate_model_osn_presence(model, elements, errors)
     checks += validate_model_osn_baseline_rules(model, errors)
@@ -281,6 +285,12 @@ def validate_layout_rules(pptx_path: Path) -> tuple[int, list[str], list[str]]:
     checks = 0
 
     if not elements:
+        return checks, errors, warnings
+    if "AWS Cloud boundary" in elements or "OCI Parents Region boundary" in elements:
+        checks += validate_odb_aws_layout(elements, errors)
+        checks += validate_odb_aws_icon_sizes(elements, errors)
+        checks += validate_label_text_box_fill(elements, errors)
+        checks += validate_relationship_connector_lengths(elements, errors)
         return checks, errors, warnings
     if "VCN boundary" not in elements:
         warnings.append("layout checks skipped: VCN boundary was not found")
@@ -438,6 +448,18 @@ def validate_standard_icon_sizes(
     return checks
 
 
+def validate_odb_aws_icon_sizes(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    for name, matches in sorted(elements.items()):
+        if not name.startswith("Icon "):
+            continue
+        for item in matches:
+            checks += assert_size_range(item, 0.26, STANDARD_ICON_SIZE_IN, errors)
+    return checks
+
+
 def validate_oracle_service_network(
     elements: dict[str, list[NamedElement]], errors: list[str]
 ) -> int:
@@ -492,6 +514,121 @@ def validate_oracle_service_network(
                     for item in service_items
                 )
             )
+
+    return checks
+
+
+def validate_odb_aws_layout(
+    elements: dict[str, list[NamedElement]], errors: list[str]
+) -> int:
+    checks = 0
+    aws_cloud = first_element(elements, "AWS Cloud boundary")
+    aws_region = first_element(elements, "AWS Region boundary")
+    parents_region = first_element(elements, "OCI Parents Region boundary")
+    control_plane = first_element(elements, "OCI Control Plane boundary")
+
+    for name, item in (
+        ("AWS Cloud boundary", aws_cloud),
+        ("AWS Region boundary", aws_region),
+        ("OCI Parents Region boundary", parents_region),
+        ("OCI Control Plane boundary", control_plane),
+    ):
+        if item is None:
+            errors.append(f"missing layout element: {name}")
+
+    if aws_cloud is not None and aws_region is not None:
+        checks += assert_inside(aws_region, aws_cloud, errors)
+    if parents_region is not None and aws_cloud is not None:
+        if parents_region.box.x >= aws_cloud.box.right + LAYOUT_TOLERANCE_IN:
+            checks += 1
+        else:
+            errors.append("OCI Parents Region boundary must be visually separate and right of AWS Cloud")
+        if shape_fill_color(parents_region):
+            checks += 1
+        else:
+            errors.append("OCI Parents Region boundary must use visible OCI grouping fill")
+        line = shape_line_color(parents_region)
+        if line == "9E9892":
+            checks += 1
+        else:
+            errors.append(
+                "OCI Parents Region boundary must use OCI region line color #9E9892: "
+                f"found {line or '<none>'}"
+            )
+    if parents_region is not None and control_plane is not None:
+        checks += assert_inside(control_plane, parents_region, errors)
+
+    for name in (
+        "AWS Cloud corner icon",
+        "AWS Region corner icon",
+        "Icon Transit Gateway",
+    ):
+        if first_element(elements, name) is not None:
+            checks += 1
+        else:
+            errors.append(f"missing ODB@AWS registered asset: {name}")
+
+    az_suffixes = sorted(
+        match.group(1)
+        for name in elements
+        for match in [re.fullmatch(r"Availability Zone ([A-Z]+) boundary", name)]
+        if match
+    )
+    if len(az_suffixes) >= 2:
+        checks += 1
+    else:
+        errors.append("ODB@AWS layout must render at least two AWS Availability Zone boundaries")
+
+    for suffix in az_suffixes:
+        az = first_element(elements, f"Availability Zone {suffix} boundary")
+        if az is not None and aws_region is not None:
+            checks += assert_inside(az, aws_region, errors)
+
+        vpc = first_element(elements, f"Amazon VPC {suffix} boundary")
+        odb = first_element(elements, f"ODB Network {suffix} boundary")
+        dc = first_element(elements, f"AWS Data Center {suffix} boundary")
+        child = first_element(elements, f"OCI Child Site {suffix} boundary")
+        vcn = first_element(elements, f"OCI VCN {suffix} boundary")
+        for name, item in (
+            (f"Amazon VPC {suffix} boundary", vpc),
+            (f"ODB Network {suffix} boundary", odb),
+            (f"AWS Data Center {suffix} boundary", dc),
+            (f"OCI Child Site {suffix} boundary", child),
+            (f"OCI VCN {suffix} boundary", vcn),
+        ):
+            if item is None:
+                errors.append(f"missing layout element: {name}")
+        if az is not None:
+            for item in (vpc, odb, dc):
+                if item is not None:
+                    checks += assert_inside(item, az, errors)
+        if dc is not None and child is not None:
+            checks += assert_inside(child, dc, errors)
+        if child is not None and vcn is not None:
+            checks += assert_inside(vcn, child, errors)
+
+        for name in (
+            f"Amazon VPC {suffix} corner icon",
+            f"Icon EC2 Applications {suffix}",
+            f"ODB Network {suffix} corner icon",
+            f"ODB Client Backup Subnet {suffix} icon",
+            f"AWS Data Center {suffix} corner icon",
+            f"OCI VCN {suffix} icon",
+            f"Client Backup Subnet {suffix} icon",
+        ):
+            if first_element(elements, name) is not None:
+                checks += 1
+            else:
+                errors.append(f"missing ODB@AWS registered asset: {name}")
+
+    tgw = first_element(elements, "Icon Transit Gateway")
+    if tgw is not None and aws_region is not None:
+        checks += assert_inside(tgw, aws_region, errors)
+
+    if any(name.startswith("ODB Peering marker ") for name in elements):
+        checks += 1
+    else:
+        errors.append("ODB@AWS layout must render the ODB Peering marker asset")
 
     return checks
 
@@ -557,6 +694,7 @@ def is_diagram_label_shape_name(name: str) -> bool:
         name.startswith("Label ")
         or name.startswith("Flow label ")
         or name.startswith("Hybrid connection label ")
+        or name.startswith("ODB label ")
         or name.endswith(" boundary label")
         or re.fullmatch(r"Subnet \d+ label", name) is not None
     )
@@ -622,6 +760,9 @@ def validate_relationship_connector_lengths(
         "Peering connection ",
         "Data Guard connection ",
         "Transit connection ",
+        "ODB Peering connection ",
+        "ODB Data Plane connection ",
+        "OCI Automation connection ",
         "Hybrid connection ",
     )
     for name, matches in elements.items():
@@ -1092,6 +1233,69 @@ def validate_model_hybrid_network_layout(
     return checks
 
 
+def validate_model_odb_aws_layout(
+    model: dict[str, Any],
+    elements: dict[str, list[NamedElement]],
+    errors: list[str],
+) -> int:
+    checks = validate_odb_aws_layout(elements, errors)
+    aws = model.get("aws") or {}
+    azs = aws.get("availability_zones") or []
+    if not isinstance(azs, list):
+        errors.append("ODB@AWS model aws.availability_zones must be a list")
+        return checks
+
+    for index, az in enumerate(azs):
+        if not isinstance(az, dict):
+            continue
+        suffix = odb_aws_suffix(az, index)
+        for name in (
+            f"Availability Zone {suffix} boundary",
+            f"Amazon VPC {suffix} boundary",
+            f"ODB Network {suffix} boundary",
+            f"AWS Data Center {suffix} boundary",
+            f"OCI Child Site {suffix} boundary",
+            f"OCI VCN {suffix} boundary",
+        ):
+            if first_element(elements, name):
+                checks += 1
+            else:
+                errors.append(f"model ODB@AWS component was not rendered: {name}")
+
+    expected_by_prefix = {
+        "ODB Peering connection ": 0,
+        "ODB Data Plane connection ": 0,
+        "Transit connection ": 0,
+        "OCI Automation connection ": 0,
+    }
+    for connection in model.get("connections") or []:
+        if not isinstance(connection, dict):
+            continue
+        text = normalize_lookup(
+            " ".join(clean_string(connection.get(field)) for field in ("id", "type", "label", "kind"))
+        ).replace(" ", "").replace("-", "")
+        if "odbpeering" in text:
+            expected_by_prefix["ODB Peering connection "] += 1
+        elif "dataplane" in text:
+            expected_by_prefix["ODB Data Plane connection "] += 1
+        elif "automation" in text:
+            expected_by_prefix["OCI Automation connection "] += 1
+        elif "tgw" in text or "transit" in text:
+            expected_by_prefix["Transit connection "] += 1
+
+    for prefix, expected in expected_by_prefix.items():
+        if expected == 0:
+            continue
+        actual = sum(len(matches) for name, matches in elements.items() if name.startswith(prefix))
+        if actual >= expected:
+            checks += 1
+        else:
+            errors.append(
+                f"expected {expected} ODB@AWS connector(s) with prefix {prefix!r}, found {actual}"
+            )
+    return checks
+
+
 def is_bastion_resource(resource: dict[str, Any]) -> bool:
     text = resource_text(resource)
     return "bastion" in text
@@ -1185,6 +1389,11 @@ def collect_model_requirements(
     if not isinstance(model, dict):
         return requirements, ["model root must be a JSON object"], warnings
 
+    if is_odb_aws_model(model):
+        collect_odb_aws_requirements(model, requirements, errors)
+        collect_connection_requirements(model, requirements, errors)
+        return requirements, errors, warnings
+
     region = model.get("region")
     if isinstance(region, dict):
         add_requirement(
@@ -1227,6 +1436,157 @@ def collect_model_requirements(
     collect_connection_requirements(model, requirements, errors)
 
     return requirements, errors, warnings
+
+
+def is_odb_aws_model(model: dict[str, Any]) -> bool:
+    text = normalize_lookup(
+        " ".join(
+            clean_string(model.get(field))
+            for field in ("architecture_type", "type", "title", "subtitle")
+        )
+    )
+    compact = text.replace(" ", "").replace("-", "")
+    return any(
+        term in compact
+        for term in (
+            "odbaws",
+            "odaws",
+            "oracledatabaseaws",
+            "oracledatabaseataws",
+        )
+    )
+
+
+def collect_odb_aws_requirements(
+    model: dict[str, Any],
+    requirements: list[Requirement],
+    errors: list[str],
+) -> None:
+    aws = model.get("aws")
+    if not isinstance(aws, dict):
+        errors.append("ODB@AWS model must include aws object")
+        return
+
+    add_requirement(requirements, "aws cloud", "aws.cloud_label", aws.get("cloud_label"), "AWS Cloud")
+    region = aws.get("region")
+    if isinstance(region, dict):
+        add_requirement(
+            requirements,
+            "aws region",
+            "aws.region.name|code",
+            region.get("code"),
+            region.get("name"),
+            "AWS Region",
+        )
+    elif region is not None:
+        errors.append("ODB@AWS model aws.region must be an object")
+
+    tgw = aws.get("transit_gateway")
+    if isinstance(tgw, dict):
+        add_requirement(
+            requirements,
+            "transit gateway",
+            "aws.transit_gateway.label",
+            tgw.get("label"),
+            tgw.get("id"),
+            "Transit Gateway",
+            "TGW",
+        )
+
+    azs = aws.get("availability_zones")
+    if not isinstance(azs, list) or not azs:
+        errors.append("ODB@AWS model must include aws.availability_zones list")
+        return
+
+    for index, az in enumerate(azs):
+        if not isinstance(az, dict):
+            errors.append(f"aws.availability_zones[{index}] must be an object")
+            continue
+        source = f"aws.availability_zones[{index}]"
+        add_requirement(requirements, "availability zone", f"{source}.label", az.get("label"), az.get("id"))
+        for field, category in (
+            ("vpc", "amazon vpc"),
+            ("odb_network", "odb network"),
+            ("aws_data_center", "aws data center"),
+        ):
+            item = az.get(field)
+            if isinstance(item, dict):
+                add_requirement(
+                    requirements,
+                    category,
+                    f"{source}.{field}.label",
+                    item.get("label"),
+                    item.get("id"),
+                )
+        child = az.get("oci_child_site")
+        if isinstance(child, dict):
+            add_requirement(
+                requirements,
+                "oci child site",
+                f"{source}.oci_child_site.label",
+                child.get("label"),
+                child.get("id"),
+            )
+            vcn = child.get("vcn")
+            if isinstance(vcn, dict):
+                add_requirement(
+                    requirements,
+                    "oci vcn",
+                    f"{source}.oci_child_site.vcn.label",
+                    vcn.get("label"),
+                    vcn.get("id"),
+                )
+                subnets = vcn.get("subnets") or []
+                if isinstance(subnets, list):
+                    for subnet_index, subnet in enumerate(subnets):
+                        if isinstance(subnet, dict):
+                            add_requirement(
+                                requirements,
+                                "oci child subnet",
+                                f"{source}.oci_child_site.vcn.subnets[{subnet_index}].label",
+                                subnet.get("label"),
+                                subnet.get("id"),
+                            )
+            database = child.get("database") or az.get("database")
+            if isinstance(database, dict):
+                add_requirement(
+                    requirements,
+                    "database",
+                    f"{source}.oci_child_site.database.label",
+                    database.get("label"),
+                    database.get("id"),
+                    database.get("type"),
+                )
+
+    parents = model.get("oci_parents_region")
+    if isinstance(parents, dict):
+        add_requirement(
+            requirements,
+            "oci parents region",
+            "oci_parents_region.label",
+            parents.get("label"),
+            "OCI Parents Region",
+        )
+        control = parents.get("control_plane")
+        if isinstance(control, dict):
+            add_requirement(
+                requirements,
+                "oci control plane",
+                "oci_parents_region.control_plane.label",
+                control.get("label"),
+                control.get("id"),
+            )
+
+
+def odb_aws_suffix(az: dict[str, Any], index: int) -> str:
+    explicit = clean_string(az.get("suffix")).upper()
+    if explicit:
+        return explicit
+    label = clean_string(az.get("label")) or clean_string(az.get("id"))
+    match = re.search(r"([a-z])\b", label, flags=re.IGNORECASE)
+    if match:
+        return match.group(1).upper()
+    return chr(ord("A") + index)
 
 
 def collect_subnet_requirements(

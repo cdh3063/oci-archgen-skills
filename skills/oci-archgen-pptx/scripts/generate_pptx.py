@@ -135,6 +135,22 @@ CONNECTOR_LABEL_SIZE = 11.0
 DRAW_CONNECTOR_LABELS = False
 DIAGRAM_FOOTER_SIZE = 10.0
 DIAGRAM_FOOTER_COLOR = "FF0000"
+ODB_AWS_CYAN = "00A4A6"
+ODB_PEERING_MARKER_SIZE = 0.32
+ODB_AWS_REQUIRED_ASSETS = (
+    "aws-cloud-corner.png",
+    "aws-region-corner.png",
+    "aws-vpc-corner.png",
+    "aws-ec2-applications.png",
+    "odb-network-corner.png",
+    "odb-subnet.png",
+    "aws-data-center-corner.png",
+    "oci-vcn.png",
+    "oci-subnet.png",
+    "exadata.png",
+    "odb-peering-marker.png",
+    "transit-gateway.png",
+)
 
 EDGE_ICON_KEYS = {
     "api-gateway",
@@ -919,6 +935,20 @@ class Renderer:
                 scope = f"{scope} - {' / '.join(vcn_names)}"
         if vcn.get("name") and len(vcns) < 2:
             scope = f"{scope} - {vcn['name']}"
+        if self._is_odb_aws_model(model):
+            aws = model.get("aws") or {}
+            aws_region = aws.get("region") or {}
+            region_label = str(
+                aws_region.get("code")
+                or aws_region.get("name")
+                or "AWS Region"
+            )
+            az_labels = [
+                str(az.get("label") or az.get("id") or "")
+                for az in self._odb_aws_azs(model)
+                if str(az.get("label") or az.get("id") or "").strip()
+            ]
+            scope = f"{region_label} - {' / '.join(az_labels)}" if az_labels else region_label
 
         slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "FFFFFF", None)
         oracle_logo = self.skill_dir / "assets" / "cover" / "oracle-logo.png"
@@ -961,6 +991,10 @@ class Renderer:
     def _add_diagram_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
         self.boxes = {}
         self.gateway_ids_by_key = {}
+
+        if self._is_odb_aws_model(model):
+            self._add_odb_aws_diagram_slide(slide, model)
+            return
 
         if self._multi_vcn_layout_requested(model):
             self._add_multi_vcn_diagram_slide(slide, model)
@@ -1236,6 +1270,611 @@ class Renderer:
             align="l",
         )
 
+    def _add_odb_aws_diagram_slide(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        self._validate_odb_aws_assets()
+        title = str(model.get("title") or "ODB@AWS Architecture")
+        aws = model.get("aws") or {}
+        aws_region = aws.get("region") or {}
+        cloud_label = str(aws.get("cloud_label") or "AWS Cloud")
+        region_label = str(aws_region.get("code") or aws_region.get("name") or "AWS Region")
+        azs = self._odb_aws_azs(model)
+        if not azs:
+            azs = [
+                {"id": "az-a", "label": "Availability Zone a"},
+                {"id": "az-b", "label": "Availability Zone b"},
+            ]
+
+        slide.add_shape("Background", Box(0, 0, SLIDE_W, SLIDE_H), "FFFFFF", None)
+        slide.add_text(
+            "Kicker",
+            Box(0.55, 0.14, 2.80, 0.22),
+            "ODB@AWS SAMPLE",
+            size_pt=8.5,
+            color="64748B",
+            bold=True,
+            align="l",
+            valign="ctr",
+            margin=0.01,
+        )
+        slide.add_text(
+            "Diagram title",
+            Box(0.55, 0.32, 11.80, 0.40),
+            title,
+            size_pt=20,
+            color="111827",
+            bold=True,
+        )
+        slide.add_shape("Header rule", Box(0.55, 0.78, 12.25, 0.01), "CBD5E1", "CBD5E1", 0.0)
+
+        aws_cloud_box = Box(0.37, 0.90, 9.50, 6.12)
+        aws_region_box = Box(0.72, 1.44, 8.83, 5.26)
+        parents_box = Box(10.14, 0.90, 2.78, 6.12)
+        self._draw_aws_cloud_container(slide, aws_cloud_box, cloud_label)
+        self._draw_aws_region_container(slide, aws_region_box, region_label)
+        self._draw_container(
+            slide,
+            "region",
+            "OCI Parents Region boundary",
+            parents_box,
+            "OCI Parents Region",
+            Box(parents_box.x + 0.18, parents_box.y + 0.08, parents_box.w - 0.36, 0.34),
+            11.0,
+            bold=True,
+            align="ctr",
+        )
+
+        tgw = aws.get("transit_gateway") or {}
+        tgw_label = str(tgw.get("label") or "Transit Gateway")
+        tgw_id = str(tgw.get("id") or "aws-tgw")
+        tgw_box = Box(1.59, 4.02, 0.48, 0.48)
+        self._draw_aws_transit_gateway_icon(slide, "Icon Transit Gateway", tgw_box)
+        slide.add_text(
+            "Label Transit Gateway",
+            Box(tgw_box.right + 0.10, tgw_box.y + 0.16, 1.35, 0.28),
+            tgw_label,
+            size_pt=STANDARD_ICON_LABEL_SIZE,
+            color="312D2A",
+            align="l",
+            valign="ctr",
+            margin=0.01,
+        )
+        self._register_box_aliases(tgw_box, tgw_id, tgw_label, "Transit Gateway", "TGW")
+
+        control = (model.get("oci_parents_region") or {}).get("control_plane") or {}
+        control_label = str(control.get("label") or "OCI Control Plane")
+        control_id = str(control.get("id") or "oci-control-plane")
+        control_box = Box(parents_box.x + 0.46, parents_box.y + 2.10, parents_box.w - 0.93, 2.65)
+        self._draw_provider_container(
+            slide,
+            "OCI Control Plane boundary",
+            control_box,
+            control_label,
+            "F8FAFC",
+            "64748B",
+            "312D2A",
+            label_size=11.0,
+            bold=True,
+            align="ctr",
+            preset="rect",
+            label_box=Box(control_box.x + 0.12, control_box.y + 0.15, control_box.w - 0.24, 0.46),
+        )
+        self._register_box_aliases(control_box, control_id, control_label, "OCI Control Plane")
+
+        az_boxes = self._odb_aws_az_boxes(aws_region_box, len(azs))
+        for index, az in enumerate(azs):
+            az_box = az_boxes[index]
+            self._draw_odb_aws_az(slide, az, az_box, index)
+
+        self._draw_odb_aws_connections(slide, model)
+        legend = self._diagram_footer_disclaimer(model)
+        slide.add_text(
+            "Legend",
+            Box(0.55, 7.08, 12.25, 0.24),
+            legend,
+            size_pt=DIAGRAM_FOOTER_SIZE,
+            color=DIAGRAM_FOOTER_COLOR,
+            align="l",
+        )
+
+    def _draw_odb_aws_az(
+        self,
+        slide: SlideBuilder,
+        az: dict[str, Any],
+        az_box: Box,
+        index: int,
+    ) -> None:
+        suffix = self._odb_aws_suffix(az, index)
+        az_label = str(az.get("label") or f"Availability Zone {suffix.lower()}")
+        self._draw_provider_container(
+            slide,
+            f"Availability Zone {suffix} boundary",
+            az_box,
+            az_label,
+            None,
+            ODB_AWS_CYAN,
+            "312D2A",
+            bold=True,
+            align="l",
+            dash="dash",
+            preset="rect",
+        )
+        self._register_box_aliases(az_box, str(az.get("id") or ""), az_label)
+
+        vpc = az.get("vpc") or {}
+        vpc_model_label = str(vpc.get("label") or f"Amazon VPC {suffix}")
+        vpc_box = Box(az_box.x + 0.16, az_box.y + 0.52, 1.55, 1.16)
+        self._draw_provider_container(
+            slide,
+            f"Amazon VPC {suffix} boundary",
+            vpc_box,
+            "VPC Subnet",
+            "FAF5FF",
+            "7C3AED",
+            "312D2A",
+            label_size=10.8,
+            bold=False,
+            preset="rect",
+            label_box=Box(vpc_box.x + 0.38, vpc_box.y + 0.12, vpc_box.w - 0.48, 0.24),
+        )
+        self._draw_aws_vpc_badge(slide, f"Amazon VPC {suffix} corner icon", Box(vpc_box.x, vpc_box.y, 0.34, 0.34))
+        self._draw_aws_ec2_icon(
+            slide,
+            f"Icon EC2 Applications {suffix}",
+            Box(vpc_box.cx - 0.24, vpc_box.y + 0.45, 0.48, 0.48),
+        )
+        slide.add_text(
+            f"Label EC2 Applications {suffix}",
+            Box(vpc_box.x + 0.18, vpc_box.bottom - 0.26, vpc_box.w - 0.36, 0.22),
+            "EC2 Applications",
+            size_pt=10.5,
+            color="312D2A",
+            align="ctr",
+            valign="ctr",
+            margin=0.01,
+        )
+        self._register_box_aliases(vpc_box, str(vpc.get("id") or f"vpc-{suffix.lower()}"), vpc_model_label, f"Amazon VPC {suffix}", f"VPC Subnet {suffix}")
+
+        odb = az.get("odb_network") or {}
+        odb_model_label = str(odb.get("label") or f"ODB Network {suffix}")
+        odb_box = Box(az_box.x + 2.45, az_box.y + 0.52, 1.82, 1.16)
+        self._draw_provider_container(
+            slide,
+            f"ODB Network {suffix} boundary",
+            odb_box,
+            "ODB Network",
+            "FFF5F5",
+            "FF0000",
+            "B91C1C",
+            label_size=10.5,
+            bold=False,
+            preset="rect",
+            label_box=Box(odb_box.x + 0.42, odb_box.y + 0.14, odb_box.w - 0.50, 0.24),
+        )
+        self._draw_odb_network_badge(slide, f"ODB Network {suffix} corner icon", Box(odb_box.x, odb_box.y, 0.34, 0.34))
+        client_backup_box = Box(odb_box.x + 0.14, odb_box.y + 0.49, odb_box.w - 0.28, 0.48)
+        slide.add_shape(
+            f"ODB Client Backup Subnet {suffix} boundary",
+            client_backup_box,
+            "ECFEFF",
+            ODB_AWS_CYAN,
+            1.0,
+            preset="rect",
+        )
+        self._draw_odb_subnet_icon(slide, f"ODB Client Backup Subnet {suffix} icon", Box(client_backup_box.x + 0.07, client_backup_box.y + 0.09, 0.30, 0.30))
+        slide.add_text(
+            f"ODB Client Backup Subnet {suffix} label",
+            Box(client_backup_box.x + 0.42, client_backup_box.y + 0.08, client_backup_box.w - 0.46, 0.30),
+            "Client/Backup\nSubnet",
+            size_pt=9.8,
+            color="334155",
+            align="ctr",
+            valign="ctr",
+            margin=0.01,
+        )
+        self._register_box_aliases(odb_box, str(odb.get("id") or f"odb-network-{suffix.lower()}"), odb_model_label, f"ODB Network {suffix}")
+
+        dc = az.get("aws_data_center") or {}
+        dc_model_label = str(dc.get("label") or f"AWS Data Center {suffix}")
+        dc_box = Box(az_box.x + 4.63, az_box.y + 0.26, 3.70, 1.70)
+        self._draw_provider_container(
+            slide,
+            f"AWS Data Center {suffix} boundary",
+            dc_box,
+            "AWS Data Center",
+            "F8FAFC",
+            "64748B",
+            "334155",
+            label_size=10.5,
+            bold=False,
+            preset="rect",
+            label_box=Box(dc_box.x + 0.42, dc_box.y + 0.12, dc_box.w - 0.54, 0.24),
+        )
+        self._draw_aws_data_center_badge(slide, f"AWS Data Center {suffix} corner icon", Box(dc_box.x, dc_box.y, 0.32, 0.32))
+        self._register_box_aliases(dc_box, str(dc.get("id") or f"aws-data-center-{suffix.lower()}"), dc_model_label, f"AWS Data Center {suffix}")
+
+        child = az.get("oci_child_site") or {}
+        child_label = str(child.get("label") or f"OCI Child Site {suffix}")
+        child_box = Box(dc_box.x + 0.24, dc_box.y + 0.49, dc_box.w - 0.42, 1.05)
+        self._draw_provider_container(
+            slide,
+            f"OCI Child Site {suffix} boundary",
+            child_box,
+            child_label,
+            "FFFFFF",
+            "64748B",
+            "312D2A",
+            label_size=11.0,
+            bold=True,
+            align="ctr",
+            preset="rect",
+            label_box=Box(child_box.x + 0.12, child_box.y + 0.08, child_box.w - 0.24, 0.24),
+        )
+        self._register_box_aliases(child_box, str(child.get("id") or f"oci-child-site-{suffix.lower()}"), child_label, f"OCI Child Site {suffix}")
+
+        vcn = child.get("vcn") or {}
+        vcn_label = str(vcn.get("label") or f"OCI VCN {suffix}")
+        if vcn.get("cidr"):
+            vcn_label = f"{vcn_label} {vcn['cidr']}"
+        vcn_box = Box(child_box.x + 0.16, child_box.y + 0.42, child_box.w - 0.32, 0.50)
+        slide.add_shape(
+            f"OCI VCN {suffix} boundary",
+            vcn_box,
+            None,
+            "F97316",
+            1.0,
+            dash="dash",
+            preset="rect",
+        )
+        self._draw_oci_network_badge(slide, f"OCI VCN {suffix} icon", Box(vcn_box.x + 0.06, vcn_box.y + 0.08, 0.31, 0.31))
+        slide.add_text(
+            f"OCI VCN {suffix} boundary label",
+            Box(vcn_box.x + 0.47, vcn_box.y + 0.10, 0.72, 0.24),
+            "OCI VCN",
+            size_pt=9.6,
+            color="312D2A",
+            align="l",
+            valign="ctr",
+            margin=0.01,
+        )
+        self._register_box_aliases(vcn_box, str(vcn.get("id") or f"oci-vcn-{suffix.lower()}"), vcn_label, f"OCI VCN {suffix}")
+
+        subnets = vcn.get("subnets") or [
+            {"id": f"client-subnet-{suffix.lower()}", "label": "Client Subnet"},
+            {"id": f"backup-subnet-{suffix.lower()}", "label": "Backup Subnet"},
+        ]
+        subnet_box = Box(vcn_box.x + 1.48, vcn_box.y + 0.09, 0.96, 0.30)
+        self._draw_oci_subnet_icon(slide, f"Client Backup Subnet {suffix} icon", Box(subnet_box.x, subnet_box.y + 0.01, 0.26, 0.26))
+        slide.add_text(
+            f"Client Backup Subnet {suffix} label",
+            Box(subnet_box.x + 0.29, subnet_box.y - 0.02, 0.70, 0.34),
+            "Client\nBackup",
+            size_pt=8.8,
+            color="334155",
+            align="l",
+            valign="ctr",
+            margin=0.01,
+        )
+        for subnet_index, subnet in enumerate(subnets[:2]):
+            subnet_label = str(subnet.get("label") or subnet.get("name") or f"Subnet {subnet_index + 1}")
+            self._register_box_aliases(subnet_box, str(subnet.get("id") or ""), subnet_label, f"{subnet_label} {suffix}")
+
+        database = child.get("database") or az.get("database") or {}
+        db_label = str(database.get("label") or f"Exadata {suffix}")
+        db_icon_1 = Box(vcn_box.right - 0.92, vcn_box.y + 0.08, 0.34, 0.34)
+        db_icon_2 = Box(vcn_box.right - 0.52, vcn_box.y + 0.08, 0.34, 0.34)
+        self._draw_odb_exadata_icon(slide, f"Icon {db_label} 1", db_icon_1)
+        self._draw_odb_exadata_icon(slide, f"Icon {db_label} 2", db_icon_2)
+        db_box = Box(db_icon_1.x, db_icon_1.y, db_icon_2.right - db_icon_1.x, db_icon_1.h)
+        self._register_box_aliases(db_box, str(database.get("id") or f"exadata-{suffix.lower()}"), db_label, f"Exadata {suffix}")
+
+    def _draw_provider_container(
+        self,
+        slide: SlideBuilder,
+        name: str,
+        box: Box,
+        label: str,
+        fill: str | None,
+        line: str | None,
+        color: str,
+        label_size: float = 11.0,
+        bold: bool = False,
+        align: str = "ctr",
+        dash: str | None = None,
+        preset: str = "roundRect",
+        label_box: Box | None = None,
+    ) -> None:
+        geom_adj = 1400 if preset == "roundRect" else None
+        slide.add_shape(name, box, fill, line, 1.0, preset=preset, dash=dash, geom_adj=geom_adj)
+        slide.add_text(
+            f"{name} label",
+            label_box or Box(box.x + 0.12, box.y + 0.08, box.w - 0.24, 0.34),
+            label,
+            size_pt=label_size,
+            color=color,
+            bold=bold,
+            align=align,
+            valign="ctr",
+            margin=0.02,
+        )
+
+    def _odb_aws_asset(self, filename: str) -> Path:
+        return self.skill_dir / "assets" / "odb-aws" / filename
+
+    def _validate_odb_aws_assets(self) -> None:
+        missing = [filename for filename in ODB_AWS_REQUIRED_ASSETS if not self._odb_aws_asset(filename).exists()]
+        if missing:
+            missing_text = ", ".join(missing)
+            raise FileNotFoundError(
+                "Missing registered ODB@AWS asset(s): "
+                f"{missing_text}. Regenerate them from /Users/ddchoi/Downloads/odb-aws-architecture.pptx "
+                "with scripts/extract_odb_aws_assets.py."
+            )
+
+    def _add_odb_aws_picture(
+        self,
+        slide: SlideBuilder,
+        name: str,
+        box: Box,
+        filename: str,
+    ) -> None:
+        asset = self._odb_aws_asset(filename)
+        if not asset.exists():
+            raise FileNotFoundError(f"Missing registered ODB@AWS asset: {filename}")
+        slide.add_picture(name, box, asset)
+
+    def _draw_aws_cloud_container(
+        self,
+        slide: SlideBuilder,
+        box: Box,
+        label: str,
+    ) -> None:
+        slide.add_shape("AWS Cloud boundary", box, "FFFFFF", "111827", 1.2, preset="rect")
+        self._add_odb_aws_picture(
+            slide,
+            "AWS Cloud corner icon",
+            Box(box.x, box.y, 0.44, 0.44),
+            "aws-cloud-corner.png",
+        )
+        slide.add_text(
+            "AWS Cloud boundary label",
+            Box(box.x + 0.50, box.y + 0.12, box.w - 1.00, 0.24),
+            label,
+            size_pt=11.0,
+            color="312D2A",
+            bold=False,
+            align="ctr",
+            valign="ctr",
+            margin=0.02,
+        )
+
+    def _draw_aws_region_container(
+        self,
+        slide: SlideBuilder,
+        box: Box,
+        label: str,
+    ) -> None:
+        self._draw_provider_container(
+            slide,
+            "AWS Region boundary",
+            box,
+            label,
+            None,
+            ODB_AWS_CYAN,
+            "00838B",
+            bold=False,
+            dash="dash",
+            preset="rect",
+        )
+        self._add_odb_aws_picture(
+            slide,
+            "AWS Region corner icon",
+            Box(box.x, box.y, 0.37, 0.37),
+            "aws-region-corner.png",
+        )
+
+    def _draw_aws_ec2_icon(self, slide: SlideBuilder, name: str, icon_box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, icon_box, "aws-ec2-applications.png")
+
+    def _draw_aws_transit_gateway_icon(self, slide: SlideBuilder, name: str, icon_box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, icon_box, "transit-gateway.png")
+
+    def _draw_aws_vpc_badge(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "aws-vpc-corner.png")
+
+    def _draw_odb_network_badge(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "odb-network-corner.png")
+
+    def _draw_aws_data_center_badge(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "aws-data-center-corner.png")
+
+    def _draw_odb_subnet_icon(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "odb-subnet.png")
+
+    def _draw_oci_subnet_icon(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "oci-subnet.png")
+
+    def _draw_oci_network_badge(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "oci-vcn.png")
+
+    def _draw_odb_exadata_icon(self, slide: SlideBuilder, name: str, box: Box) -> None:
+        self._add_odb_aws_picture(slide, name, box, "exadata.png")
+
+    def _draw_odb_aws_connections(self, slide: SlideBuilder, model: dict[str, Any]) -> None:
+        odb_marker = self._odb_aws_asset("odb-peering-marker.png")
+        drawn_labels: set[str] = set()
+        for connection in model.get("connections") or []:
+            if not isinstance(connection, dict):
+                continue
+            source_id = str(connection.get("from") or connection.get("source") or "")
+            target_id = str(connection.get("to") or connection.get("target") or "")
+            source = self._box_for_endpoint(source_id)
+            target = self._box_for_endpoint(target_id)
+            if not source or not target:
+                continue
+
+            label = str(connection.get("label") or connection.get("type") or "")
+            compact = normalize_lookup(
+                " ".join(str(connection.get(field) or "") for field in ("id", "type", "kind", "label"))
+            ).replace(" ", "").replace("-", "")
+
+            arrow = "odbdataplane" in compact or "dataplane" in compact
+            dash = "dash" if "automation" in compact or "controlplane" in compact else None
+            prefix = "ODB relationship"
+            if "odbpeering" in compact:
+                prefix = "ODB Peering connection"
+                start = (source.right, source.cy)
+                end = (target.x, source.cy)
+            elif "dataplane" in compact:
+                prefix = "ODB Data Plane connection"
+                start = (source.x, source.cy)
+                end = (target.right, source.cy)
+            elif "automation" in compact:
+                prefix = "OCI Automation connection"
+                start = (source.x, source.cy)
+                end = (target.right, target.cy)
+            elif "transit" in compact or "tgw" in compact:
+                prefix = "Transit connection"
+                if target.cy < source.cy:
+                    start = (source.cx, source.y)
+                    end = (target.cx, target.bottom)
+                else:
+                    start = (source.cx, source.bottom)
+                    end = (target.cx, target.y)
+            else:
+                start, end = self._edge_points(source, target)
+
+            slide.add_arrow(
+                f"{prefix} {source_id} to {target_id}",
+                start,
+                end,
+                dash=dash,
+                arrow=arrow,
+            )
+            if "odbpeering" in compact and odb_marker.exists():
+                marker_box = Box(
+                    (start[0] + end[0]) / 2 - ODB_PEERING_MARKER_SIZE / 2,
+                    (start[1] + end[1]) / 2 - ODB_PEERING_MARKER_SIZE / 2,
+                    ODB_PEERING_MARKER_SIZE,
+                    ODB_PEERING_MARKER_SIZE,
+                )
+                slide.add_picture(f"ODB Peering marker {source_id} to {target_id}", marker_box, odb_marker)
+
+            label_key = normalize_lookup(label)
+            draw_label = (
+                bool(label)
+                and "transit" not in compact
+                and "tgw" not in compact
+                and "dataplane" not in compact
+            )
+            if draw_label and label_key in drawn_labels:
+                draw_label = False
+            if draw_label and label_key:
+                drawn_labels.add(label_key)
+            if draw_label:
+                display_label = self._odb_aws_connection_label(label)
+                slide.add_text(
+                    f"ODB label {source_id} to {target_id}",
+                    self._odb_aws_connection_label_box(start, end, display_label, compact),
+                    display_label,
+                    size_pt=CONNECTOR_LABEL_SIZE,
+                    color=CONNECTOR_LABEL_COLOR,
+                    bold=True,
+                    align="ctr",
+                    valign="ctr",
+                    fill=CONNECTOR_LABEL_FILL,
+                    margin=0.02,
+                )
+
+    def _odb_aws_connection_label(self, label: str) -> str:
+        normalized = normalize_lookup(label)
+        if normalized == "transit gateway":
+            return "TGW"
+        return label
+
+    def _odb_aws_connection_label_box(
+        self,
+        start: tuple[float, float],
+        end: tuple[float, float],
+        label: str,
+        compact: str,
+    ) -> Box:
+        label_w = self._flow_label_width(label)
+        label_h = 0.24
+        mx = (start[0] + end[0]) / 2
+        my = (start[1] + end[1]) / 2
+        if "automation" in compact:
+            x = min(max(mx - label_w / 2, 7.55), 8.45)
+            y = min(max(my - label_h - 0.05, 1.75), 5.98)
+            return Box(x, y, label_w, label_h)
+        if "odbpeering" in compact:
+            return Box(mx - label_w / 2, my - 0.32, label_w, label_h)
+        if "dataplane" in compact:
+            return Box(mx - label_w / 2, my - 0.30, label_w, label_h)
+        return self._flow_label_box(start, end, label)
+
+    def _register_box_aliases(self, box: Box, *aliases: str) -> None:
+        for alias in aliases:
+            if not alias:
+                continue
+            self.boxes[alias] = box
+            self.boxes[alias.lower()] = box
+            normalized = normalize_lookup(alias)
+            if normalized:
+                self.boxes[normalized] = box
+
+    def _is_odb_aws_model(self, model: dict[str, Any]) -> bool:
+        text = normalize_lookup(
+            " ".join(
+                str(model.get(field) or "")
+                for field in ("architecture_type", "type", "title", "subtitle")
+            )
+        )
+        compact = text.replace(" ", "").replace("-", "")
+        return any(
+            term in compact
+            for term in (
+                "odbaws",
+                "odaws",
+                "oracledatabaseaws",
+                "oracledatabaseataws",
+            )
+        )
+
+    def _odb_aws_azs(self, model: dict[str, Any]) -> list[dict[str, Any]]:
+        aws = model.get("aws") or {}
+        azs = aws.get("availability_zones") or aws.get("azs") or []
+        if isinstance(azs, list):
+            return [az for az in azs if isinstance(az, dict)]
+        return []
+
+    def _odb_aws_az_boxes(self, region_box: Box, count: int) -> list[Box]:
+        count = max(count, 1)
+        if count == 2:
+            height = 2.12
+            gap = 0.28
+            top = region_box.y + 0.52
+            return [
+                Box(region_box.x + 0.17, top + index * (height + gap), region_box.w - 0.37, height)
+                for index in range(count)
+            ]
+        gap = 0.20
+        top = region_box.y + 0.42
+        height = (region_box.h - 0.66 - gap * (count - 1)) / count
+        return [
+            Box(region_box.x + 0.26, top + index * (height + gap), region_box.w - 0.52, height)
+            for index in range(count)
+        ]
+
+    def _odb_aws_suffix(self, az: dict[str, Any], index: int) -> str:
+        explicit = str(az.get("suffix") or "").strip()
+        if explicit:
+            return explicit.upper()
+        label = str(az.get("label") or az.get("id") or "")
+        match = re.search(r"([a-z])\b", label, flags=re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+        return chr(ord("A") + index)
+
     def _multi_vcn_layout_requested(self, model: dict[str, Any]) -> bool:
         return len(self._model_vcns(model)) >= 2
 
@@ -1304,7 +1943,7 @@ class Renderer:
     def _diagram_footer_disclaimer(self, model: dict[str, Any]) -> str:
         if self._is_korean_model(model):
             return "본 문서는 AI 산출물이므로 정확하지 않을 수 있습니다. 반드시 검증 후 사용하십시오."
-        return "This document is AI-generated and may be inaccurate. Validate it thoroughly before use."
+        return "This document was generated by AI and may be inaccurate. Validate thoroughly before use."
 
     def _is_korean_model(self, model: dict[str, Any]) -> bool:
         language = normalize_lookup(model.get("language"))
@@ -1711,6 +2350,8 @@ class Renderer:
         return any(term in compact for term in ("dr", "dataguard", "standby", "disasterrecovery"))
 
     def _model_has_database(self, model: dict[str, Any]) -> bool:
+        if self._is_odb_aws_model(model):
+            return True
         for resource in model.get("resources") or []:
             if isinstance(resource, dict) and self._is_database_resource(resource):
                 return True

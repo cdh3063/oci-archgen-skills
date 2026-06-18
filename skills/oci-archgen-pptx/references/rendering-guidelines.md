@@ -60,6 +60,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 - Use OCI Architecture Diagram Toolkit assets for OCI services and containers whenever available.
 - Use provider-specific assets only for provider-specific resources. For example, AWS icons may be used for VPC, Transit Gateway, EC2, ODB@AWS, or AWS data center elements, but the deck cover remains OCI/Oracle branded.
+- For ODB@AWS diagrams, AWS-side provider icons and network containers must follow `references/odb-aws-guidelines.md` and use registered `assets/odb-aws/` assets extracted from the reference `odb-aws-architecture.pptx`; do not invent fallback AWS/ODB icons.
 - Keep service icons consistently sized within the same tier or grouping.
 - Use the standard service icon size by default, but reduce icon size when resource density would push icons, labels, or boundaries outside their owning container. Keep icons readable and preserve containment over strict size uniformity.
 - Center a single service icon within its owning container when it represents the main workload in that container.
@@ -79,6 +80,7 @@ Use these rules for every generated architecture deck, including OCI-only, multi
 
 - Render OCI Region and OCI Parents Region containers with OCI grouping colors from `container-style-map.json`; do not use white or transparent fill for OCI Region boundaries.
 - OCI Parents Region in ODB@AWS diagrams must visually match the OCI Region family, using a gray OCI grouping fill and `#9E9892` line color.
+- This OCI Parents Region rule is an explicit ODB@AWS exception: AWS Cloud, AWS Region, AZ, VPC Subnet, ODB Network, AWS Data Center, OCI Child Site, and OCI VCN containers follow the ODB@AWS reference PPTX AWS architecture styling instead.
 - If the standard light OCI Region fill has insufficient contrast against the slide background, use a stronger OCI grouping gray from the same OCI container palette rather than leaving the region visually white.
 
 ## Connectors

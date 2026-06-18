@@ -124,6 +124,94 @@ Use this JSON-like contract as the intermediate representation before producing 
 }
 ```
 
+## Oracle Database@AWS Extension
+
+Use this extension when `architecture_type` is `odb-aws`, `oracle-database-aws`,
+or the request explicitly mentions Oracle Database@AWS / ODB@AWS. The ODB@AWS
+renderer uses this provider-specific topology instead of the normal
+`region -> vcn -> subnet -> service` OCI layout.
+
+The ODB@AWS renderer uses registered `assets/odb-aws/` PNG assets extracted
+from `/Users/ddchoi/Downloads/odb-aws-architecture.pptx`. AWS Cloud, AWS
+Region, AZ, VPC Subnet, ODB Network, AWS Data Center, OCI Child Site, OCI VCN,
+Transit Gateway, and ODB Peering elements follow that reference PPTX's AWS
+architecture design. `OCI Parents Region` is the exception: render it with the
+standard OCI Region container style.
+
+```json
+{
+  "architecture_type": "odb-aws",
+  "aws": {
+    "cloud_label": "AWS Cloud",
+    "region": {
+      "name": "AWS Region",
+      "code": "ap-northeast-2"
+    },
+    "transit_gateway": {
+      "id": "aws-tgw",
+      "label": "Transit Gateway"
+    },
+    "availability_zones": [
+      {
+        "id": "az-a",
+        "suffix": "A",
+        "label": "Availability Zone a",
+        "vpc": {
+          "id": "vpc-a",
+          "label": "Amazon VPC A",
+          "cidr": "10.10.0.0/16"
+        },
+        "odb_network": {
+          "id": "odb-network-a",
+          "label": "ODB Network A",
+          "cidr": "172.16.10.0/24"
+        },
+        "aws_data_center": {
+          "id": "aws-data-center-a",
+          "label": "AWS Data Center A"
+        },
+        "oci_child_site": {
+          "id": "oci-child-site-a",
+          "label": "OCI Child Site A",
+          "vcn": {
+            "id": "oci-vcn-a",
+            "label": "OCI VCN A",
+            "cidr": "192.168.10.0/24",
+            "subnets": [
+              {"id": "client-subnet-a", "label": "Client Subnet"},
+              {"id": "backup-subnet-a", "label": "Backup Subnet"}
+            ]
+          },
+          "database": {
+            "id": "exadata-a",
+            "type": "exadata",
+            "label": "Exadata A",
+            "icon_key": "exadata-database-service"
+          }
+        }
+      }
+    ]
+  },
+  "oci_parents_region": {
+    "id": "oci-parents-region",
+    "label": "OCI Parents Region",
+    "control_plane": {
+      "id": "oci-control-plane",
+      "label": "OCI Control Plane"
+    }
+  },
+  "connections": [
+    {"type": "transit-gateway", "from": "aws-tgw", "to": "vpc-a", "label": "TGW"},
+    {"type": "odb-peering", "from": "vpc-a", "to": "odb-network-a", "label": "ODB Peering"},
+    {"type": "odb-data-plane", "from": "oci-vcn-a", "to": "odb-network-a", "label": "ODB Data Plane"},
+    {"type": "oci-automation", "from": "oci-control-plane", "to": "oci-child-site-a", "label": "OCI Automation"}
+  ]
+}
+```
+
+ODB@AWS diagram labels still follow the global rule: architecture-facing labels
+stay in English, while narrative notes can follow the user's input language.
+
 ## Defaults
 
 - `language` tracks the user's input/narrative language for slides 3 and 4. It does not localize architecture-facing labels.

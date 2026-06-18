@@ -1,0 +1,84 @@
+{
+  "source": "/Users/ddchoi/Downloads/odb-aws-architecture.pptx",
+  "assets": {
+    "oracle-database-at-aws.png": {
+      "shape_name": "Oracle Database at AWS icon",
+      "slide": 1,
+      "sha1": "c4c9044167aa4e6e3fd13bde9ad6bafd608ad58a",
+      "bytes": 1071
+    },
+    "aws-cloud-corner.png": {
+      "shape_name": "AWS Cloud corner icon",
+      "slide": 2,
+      "sha1": "c6bfb02f785ae002d5e41a9b4de688b41ce5e1ff",
+      "bytes": 1302
+    },
+    "aws-region-corner.png": {
+      "shape_name": "AWS Region corner icon",
+      "slide": 2,
+      "sha1": "5cd7b1edc7a4b3f08e2191c1b69fd0b3a6e11083",
+      "bytes": 495
+    },
+    "aws-vpc-corner.png": {
+      "shape_name": "AZ a VPC corner icon",
+      "slide": 2,
+      "sha1": "6ea7c91644c20a515f5294582ff9f64bc215e300",
+      "bytes": 1111
+    },
+    "aws-ec2-applications.png": {
+      "shape_name": "AZ a EC2 applications icon",
+      "slide": 2,
+      "sha1": "5fdcf76ca2e262c58529ee036bc090927c5469ca",
+      "bytes": 693
+    },
+    "odb-network-corner.png": {
+      "shape_name": "AZ a ODB corner icon",
+      "slide": 2,
+      "sha1": "c4c9044167aa4e6e3fd13bde9ad6bafd608ad58a",
+      "bytes": 1071
+    },
+    "odb-subnet.png": {
+      "shape_name": "AZ a ODB subnet icon",
+      "slide": 2,
+      "sha1": "66b936e95e31519a78fb01dbc5d1bbee6eeaa006",
+      "bytes": 781
+    },
+    "aws-data-center-corner.png": {
+      "shape_name": "AZ a data center corner icon",
+      "slide": 2,
+      "sha1": "eced12a9d76475ce849de3b61ee2c862b5cd6fab",
+      "bytes": 404
+    },
+    "oci-vcn.png": {
+      "shape_name": "AZ a OCI VCN icon",
+      "slide": 2,
+      "sha1": "218e5e0ea0db9197a92f099dd45fd406c65b639a",
+      "bytes": 24519
+    },
+    "oci-subnet.png": {
+      "shape_name": "AZ a OCI subnet icon",
+      "slide": 2,
+      "sha1": "66b936e95e31519a78fb01dbc5d1bbee6eeaa006",
+      "bytes": 781
+    },
+    "exadata.png": {
+      "shape_name": "AZ a Exadata 1",
+      "slide": 2,
+      "sha1": "77892e230004bb80315342a6c1aad1d7ae05f73b",
+      "bytes": 12482
+    },
+    "odb-peering-marker.png": {
+      "shape_name": "AZ a ODB peering icon",
+      "slide": 2,
+      "sha1": "3faa2d15c1433b051f52cab139c6841bea549465",
+      "bytes": 2305
+    },
+    "transit-gateway.png": {
+      "shape_name": "Transit Gateway icon",
+      "slide": 2,
+      "sha1": "0863af01567e8a57fa80077b82e38955470dda4a",
+      "bytes": 1945
+    }
+  },
+  "missing": []
+}

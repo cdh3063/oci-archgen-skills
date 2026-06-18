@@ -4,6 +4,15 @@ Use these rules when a request mentions Oracle Database@AWS, ODB@AWS, OD@AWS, or
 
 Apply `references/rendering-guidelines.md` first for common slide structure, title slide, diagram title, footer disclaimer, label alignment, connector readability, notes, checkpoints, and validation rules. This file only adds Oracle Database@AWS-specific topology and placement rules.
 
+## Reference Assets And Design Source
+
+- Treat `/Users/ddchoi/Downloads/odb-aws-architecture.pptx` as the local visual source of truth for ODB@AWS AWS-side icons and network-container styling.
+- Register ODB@AWS provider assets under `assets/odb-aws/` by running `scripts/extract_odb_aws_assets.py /Users/ddchoi/Downloads/odb-aws-architecture.pptx --out assets/odb-aws`.
+- Required registered assets are `aws-cloud-corner.png`, `aws-region-corner.png`, `aws-vpc-corner.png`, `aws-ec2-applications.png`, `odb-network-corner.png`, `odb-subnet.png`, `aws-data-center-corner.png`, `oci-vcn.png`, `oci-subnet.png`, `exadata.png`, `odb-peering-marker.png`, `oracle-database-at-aws.png`, and `transit-gateway.png`.
+- Do not hand-draw or invent fallback icons for ODB@AWS AWS, ODB Network, Transit Gateway, AWS Data Center, OCI VCN/subnet, Exadata, or ODB Peering assets. If an asset is missing, extract it from the reference PPTX and update `assets/odb-aws/asset-manifest.json`.
+- Use the reference PPTX AWS architecture container treatment for AWS Cloud, AWS Region, Availability Zone, VPC Subnet, ODB Network, ODB subnet, AWS Data Center, OCI Child Site, OCI VCN, Transit Gateway, ODB Peering, ODB data-plane, and OCI Automation elements.
+- Exception: `OCI Parents Region` is an OCI-side control-plane region container. Render it with the normal OCI Region container guidelines and OCI grouping colors, not AWS architecture container styling.
+
 ## Topology
 
 - Model Oracle Database@AWS as a multicloud topology, not as a normal OCI-only VCN layout.
@@ -23,6 +32,20 @@ Apply `references/rendering-guidelines.md` first for common slide structure, tit
 - When two Exadata database icons represent replicated database endpoints, label the relationship as Active Data Guard when requested. Keep the label close to the Exadata-to-Exadata connector and avoid overlapping OCI automation/control-plane lines.
 - Show OCI automation/control-plane relationships from OCI Parents Region / OCI Control Plane to the OCI child site, but avoid making control-plane lines louder than data-plane connectivity.
 - Anchor each OCI Automation/control-plane connector at the left-side midpoint of the `OCI Control Plane` box and route it to the right-side midpoint of each AZ-specific `OCI Child Site` box. Do not terminate OCI Automation lines on the AWS Data Center, OCI VCN, Exadata icon, or parent AWS/AZ container boundary.
+
+## AWS-Side Container Styling
+
+- Match the reference PPTX for AWS-side container colors and hierarchy:
+  - `AWS Cloud`: white fill, dark border, `aws-cloud-corner.png` at the top-left corner, centered `AWS Cloud` label.
+  - `AWS Region`: no fill, cyan dashed border `#00A4A6`, `aws-region-corner.png` at the top-left corner, centered region label.
+  - `Availability Zone`: no fill, cyan dashed border `#00A4A6`, left-aligned `Availability Zone a/b` label.
+  - `VPC Subnet`: lavender fill `#FAF5FF`, purple border `#7C3AED`, `aws-vpc-corner.png` at the top-left corner, EC2 applications icon inside.
+  - `ODB Network`: light red fill `#FFF5F5`, red border `#FF0000`, `odb-network-corner.png` at the top-left corner, ODB subnet box inside.
+  - `ODB subnet`: cyan fill `#ECFEFF`, cyan border `#00A4A6`, `odb-subnet.png` icon and compact `Client/Backup Subnet` label.
+  - `AWS Data Center`: light gray fill `#F8FAFC`, slate border `#64748B`, `aws-data-center-corner.png` at the top-left corner.
+  - `OCI Child Site`: white fill, slate border `#64748B`, placed inside AWS Data Center.
+  - `OCI VCN`: transparent fill, orange dashed border `#F97316`, `oci-vcn.png` and `oci-subnet.png` extracted from the reference PPTX.
+- Keep these AWS-side containers rectangular, not rounded OCI grouping boxes. Do not apply OCI Region or VCN container styling to AWS Cloud, AWS Region, AZ, VPC Subnet, ODB Network, AWS Data Center, OCI Child Site, or OCI VCN in the ODB@AWS renderer.
 
 ## OCI Parents Region Rendering
 
