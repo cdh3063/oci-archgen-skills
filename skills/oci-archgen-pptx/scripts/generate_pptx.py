@@ -1766,6 +1766,7 @@ class Renderer:
                 and "transit" not in compact
                 and "tgw" not in compact
                 and "dataplane" not in compact
+                and "automation" not in compact
             )
             if draw_label and label_key in drawn_labels:
                 draw_label = False
